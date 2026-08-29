@@ -65,7 +65,7 @@ function Settings() {
     window.location.href = "/";
   }
 
-  if (!me) return <p className="text-muted-foreground">Loading…</p>;
+  if (!me) return <p className="text-ink-soft">Loading…</p>;
 
   const consentMap: Record<string, boolean> = {};
   me.consents.forEach((c: any) => (consentMap[c.purpose] = c.granted));
@@ -73,23 +73,23 @@ function Settings() {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight">Settings &amp; privacy</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{me.user.email}</p>
+        <h1 className="text-2xl font-normal">Settings &amp; privacy</h1>
+        <p className="mt-1 text-sm text-ink-soft">{me.user.email}</p>
       </header>
 
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4 text-primary" /> Consent
+            <ShieldCheck className="h-4 w-4 text-accent" /> Consent
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
           {Object.entries(CONSENT_LABELS).map(([purpose, label]) => (
-            <label key={purpose} className="flex items-center justify-between gap-3 rounded-xl border p-3 text-sm">
+            <label key={purpose} className="flex items-center justify-between gap-3 rounded border p-3 text-sm">
               <span>
                 {label}
                 {(purpose === "storage" || purpose === "analysis") && (
-                  <Badge variant="outline" className="ml-2">required for analysis</Badge>
+                  <Badge variant="neutral" className="ml-2">required for analysis</Badge>
                 )}
               </span>
               <input
@@ -97,7 +97,7 @@ function Settings() {
                 disabled={busy}
                 checked={!!consentMap[purpose]}
                 onChange={(e) => toggle(purpose, e.target.checked)}
-                className="h-4 w-4 accent-[hsl(var(--primary))]"
+                className="h-4 w-4 accent-[hsl(var(--accent))]"
               />
             </label>
           ))}
@@ -109,7 +109,7 @@ function Settings() {
           <CardTitle>Your data</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <ul className="space-y-1 rounded-xl bg-muted/50 p-3 text-xs text-muted-foreground">
+          <ul className="space-y-1 rounded bg-surface-sunken p-3 text-xs text-ink-soft">
             <li>• Images are encrypted at rest and never sold or used for advertising.</li>
             <li>• No facial recognition or identity matching is performed, ever.</li>
             <li>• Access is audit-logged with hashed, minimal metadata (no raw IP addresses).</li>
@@ -131,23 +131,23 @@ function Settings() {
         </CardContent>
       </Card>
 
-      <Card className="border-destructive/40">
+      <Card className="border-alert/40">
         <CardHeader>
-          <CardTitle className="text-destructive">Delete everything</CardTitle>
+          <CardTitle className="text-alert">Delete everything</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-ink-soft">
             Permanently deletes your account, scans, images, observations, and treatments. This cannot be undone. Type{" "}
-            <code className="rounded bg-muted px-1">DELETE</code> to confirm.
+            <code className="rounded bg-surface-sunken px-1">DELETE</code> to confirm.
           </p>
           <input
             value={confirmText}
             onChange={(e) => setConfirmText(e.target.value)}
-            className="w-40 rounded-xl border bg-background px-3 py-2 text-sm"
+            className="w-40 rounded border bg-surface px-3 py-2 text-sm"
             placeholder="DELETE"
           />
           <div>
-            <Button variant="destructive" disabled={confirmText !== "DELETE"} onClick={deleteAccount}>
+            <Button variant="alert" disabled={confirmText !== "DELETE"} onClick={deleteAccount}>
               <Trash2 className="h-4 w-4" /> Permanently delete my account
             </Button>
           </div>

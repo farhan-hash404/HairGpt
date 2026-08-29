@@ -2,33 +2,31 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Camera, FileText, Sparkles } from "lucide-react";
-import { api, type Analysis } from "@/lib/api";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { ConfidenceRing } from "@/components/confidence-ring";
-import { MetricCard } from "@/components/metric-card";
-import { WhyEvidence } from "@/components/why-evidence";
+import { api, modelTrustLabel, type Analysis } from "@/lib/api";
 import { AuthGate } from "@/components/auth-gate";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { ConfidenceScale } from "@/components/confidence";
+import { Readout } from "@/components/metric-card";
+import { WhyEvidence } from "@/components/why-evidence";
 import { pct } from "@/lib/utils";
 
-/** Home dashboard — Apple-Health-like. Shows Hair Health, Hairline, Crown,
- *  Treatment adherence, Last scan, and Next recommended scan immediately. */
-export default function HomePage() {
+const SCAN_INTERVAL_DAYS = 30;
+
+export default function OverviewPage() {
   return (
     <AuthGate>
-      <Dashboard />
+      <Overview />
     </AuthGate>
   );
 }
 
-const SCAN_INTERVAL_DAYS = 30;
-
-function Dashboard() {
+function Overview() {
   const [latest, setLatest] = React.useState<Analysis | null>(null);
   const [scans, setScans] = React.useState<any[]>([]);
   const [adherence, setAdherence] = React.useState<any[]>([]);
+  const [shedding, setShedding] = React.useState<any>(null);
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
@@ -39,167 +37,226 @@ function Dashboard() {
         const complete = list.find((s: any) => s.status === "complete");
         if (complete) setLatest(await api.result(complete.id));
         setAdherence(await api.adherenceSummary());
+        setShedding(await api.sheddingTrend(60));
       } catch {
-        /* first-run: nothing yet */
+        /* first run */
       } finally {
         setLoading(false);
       }
     })();
   }, []);
 
+  if (loading) return <p className="text-sm text-ink-soft">Loading…</p>;
+  if (!latest) return <FirstRun />;
+
   const lastScan = scans[0];
-  const daysSince = lastScan ? Math.floor((Date.now() - new Date(lastScan.created_at).getTime()) / 86400000) : null;
+  const daysSince = lastScan
+    ? Math.floor((Date.now() - new Date(lastScan.created_at).getTime()) / 86400000)
+    : null;
   const nextIn = daysSince === null ? null : Math.max(0, SCAN_INTERVAL_DAYS - daysSince);
   const avgAdherence =
     adherence.length > 0 ? adherence.reduce((a, t) => a + t.adherence_pct, 0) / adherence.length : null;
 
-  const hs = latest?.hair_summary ?? null;
-  const anyMock = latest?.observations?.some((o) => o.is_mock) ?? false;
-
-  if (loading) return <p className="text-muted-foreground">Loading your dashboard…</p>;
-
-  if (!latest) return <EmptyState />;
+  const hs = latest.hair_summary ?? null;
+  const trust = latest.observations.length
+    ? modelTrustLabel(latest.observations[0])
+    : null;
+  const verdict = latest.safety_verdict?.verdict ?? "ok";
 
   return (
-    <div className="space-y-6">
-      {/* Hero: Hair Health */}
-      <Card className="overflow-hidden">
-        <div className="flex flex-col gap-5 p-6 sm:flex-row sm:items-center sm:justify-between">
+    <div className="space-y-8">
+      {/* Record header. The thesis of the page: a reading, with its confidence
+          and its caveats attached, not a verdict. */}
+      <header className="animate-rise">
+        <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
           <div className="min-w-0">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Hair Health</p>
-            <h1 className="mt-1.5 text-3xl font-semibold tracking-tight">
-              {describeOverall(latest.overall_confidence, hs)}
+            <p className="label">Hair &amp; scalp · latest reading</p>
+            <h1 className="mt-2 max-w-[18ch] text-3xl font-normal">
+              {headline(latest.overall_confidence, hs)}
             </h1>
-            <p className="mt-2 max-w-xl text-sm text-muted-foreground">
+            <p className="mt-2 max-w-[62ch] text-sm text-ink-soft">
               {latest.explanation?.summary ?? "Based on your most recent scan."}
             </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <Badge variant={latest.safety_verdict?.verdict === "refer" ? "destructive" : latest.safety_verdict?.verdict === "caution" ? "caution" : "default"}>
-                safety: {latest.safety_verdict?.verdict ?? "—"}
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <Badge variant={verdict === "refer" ? "alert" : verdict === "caution" ? "caution" : "ok"}>
+                safety: {verdict}
               </Badge>
-              {anyMock && <Badge variant="mock">mock inference · not validated</Badge>}
+              {trust && <Badge variant="flag">{trust.text}</Badge>}
+              {lastScan && (
+                <span className="readout text-2xs text-ink-faint">
+                  {new Date(lastScan.created_at).toLocaleDateString()}
+                </span>
+              )}
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <ConfidenceRing value={latest.overall_confidence} size={76} label="overall interpretation" />
-            <div className="text-sm">
-              <p className="font-medium">Overall confidence</p>
-              <p className="text-muted-foreground">how sure the system is</p>
-            </div>
+
+          <ConfidenceScale
+            value={latest.overall_confidence}
+            label="overall interpretation"
+            className="w-full max-w-[220px]"
+          />
+        </div>
+
+        <div className="scale-rule mt-6" aria-hidden="true" />
+      </header>
+
+      {/* Measurements */}
+      <section>
+        <h2 className="label mb-3">Measurements</h2>
+        <div className="grid gap-px overflow-hidden rounded-lg border bg-rule sm:grid-cols-2 lg:grid-cols-3">
+          <div className="bg-surface">
+            <Readout
+              label="Hairline"
+              value={hs?.hairline_position?.label ? "Localized" : "—"}
+              caption={hs?.hairline_position?.label ?? "No hairline reading in the last scan"}
+              confidence={hs?.hairline_position?.confidence ?? null}
+              href="/timeline"
+            />
+          </div>
+          <div className="bg-surface">
+            <Readout
+              label="Crown"
+              value={hs?.crown_density?.label?.replace("crown appears ", "") ?? "—"}
+              caption="Apparent crown density"
+              confidence={hs?.crown_density?.confidence ?? null}
+              href="/timeline"
+            />
+          </div>
+          <div className="bg-surface">
+            <Readout
+              label="Scalp visibility"
+              value={pct(hs?.scalp_visibility?.value ?? null)}
+              caption="Apparent fraction of visible scalp"
+              confidence={hs?.scalp_visibility?.confidence ?? null}
+              href="/timeline"
+            />
           </div>
         </div>
-        <div className="border-t bg-muted/30 p-5">
-          <WhyEvidence explain={latest.explanation ?? undefined} evidence={latest.explanation?.evidence} />
+      </section>
+
+      {/* Programme — the things the user controls, distinct from what we measured. */}
+      <section>
+        <h2 className="label mb-3">Your programme</h2>
+        <div className="grid gap-px overflow-hidden rounded-lg border bg-rule sm:grid-cols-2 lg:grid-cols-3">
+          <div className="bg-surface">
+            <Readout
+              label="Treatment adherence"
+              value={avgAdherence === null ? "—" : avgAdherence.toFixed(0)}
+              unit={avgAdherence === null ? undefined : "%"}
+              caption={
+                adherence.length
+                  ? `${adherence.length} active treatment${adherence.length === 1 ? "" : "s"}`
+                  : "Nothing tracked yet"
+              }
+              href="/treatments"
+            />
+          </div>
+          <div className="bg-surface">
+            <Readout
+              label="Shedding"
+              value={sheddingValue(shedding)}
+              caption={shedding?.trend_note ?? "Log a few days to see a trend"}
+              href="/shedding"
+            />
+          </div>
+          <div className="bg-surface">
+            <Readout
+              label="Next scan"
+              value={nextIn === null ? "—" : nextIn === 0 ? "Due" : `${nextIn}d`}
+              caption={`Even ${SCAN_INTERVAL_DAYS}-day spacing keeps scans comparable`}
+            />
+          </div>
         </div>
-      </Card>
+      </section>
 
-      {/* Metric grid */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <MetricCard
-          label="Hairline"
-          value={hs?.hairline_position?.label ? "Localized" : "—"}
-          sublabel={hs?.hairline_position?.label ?? "No hairline reading in last scan"}
-          confidence={hs?.hairline_position?.confidence ?? null}
-          isMock={anyMock}
-          href="/timeline"
-        />
-        <MetricCard
-          label="Crown"
-          value={hs?.crown_density?.label ?? "—"}
-          sublabel="apparent crown density"
-          confidence={hs?.crown_density?.confidence ?? null}
-          isMock={anyMock}
-          href="/timeline"
-        />
-        <MetricCard
-          label="Scalp visibility"
-          value={pct(hs?.scalp_visibility?.value ?? null)}
-          sublabel="apparent fraction of visible scalp"
-          confidence={hs?.scalp_visibility?.confidence ?? null}
-          isMock={anyMock}
-          href="/timeline"
-        />
-        <MetricCard
-          label="Treatment adherence"
-          value={avgAdherence === null ? "—" : `${avgAdherence.toFixed(0)}%`}
-          sublabel={adherence.length ? `${adherence.length} active treatment(s)` : "No treatments tracked yet"}
-          href="/treatments"
-        />
-        <MetricCard
-          label="Last scan"
-          value={daysSince === null ? "—" : daysSince === 0 ? "Today" : `${daysSince}d ago`}
-          sublabel={lastScan ? new Date(lastScan.created_at).toLocaleDateString() : ""}
-          href="/timeline"
-        />
-        <MetricCard
-          label="Next recommended scan"
-          value={nextIn === null ? "—" : nextIn === 0 ? "Now" : `in ${nextIn}d`}
-          sublabel={`Consistent ${SCAN_INTERVAL_DAYS}-day intervals improve comparability`}
-          tone="muted"
-        />
-      </div>
-
-      {/* Actions */}
-      <div className="flex flex-wrap gap-3">
-        <Link href="/scan/hair">
-          <Button size="lg">
-            <Camera className="h-4 w-4" /> New scan
-          </Button>
+      <section className="flex flex-wrap items-center gap-2">
+        <Link href="/assessment">
+          <Button size="lg">New assessment</Button>
         </Link>
         <Link href="/compare">
           <Button size="lg" variant="outline">
-            <Sparkles className="h-4 w-4" /> Compare with previous scan
+            Compare scans
           </Button>
         </Link>
         <Link href={`/report/${latest.session_id}`}>
           <Button size="lg" variant="outline">
-            <FileText className="h-4 w-4" /> Doctor report
+            Doctor report
           </Button>
         </Link>
-      </div>
+      </section>
+
+      <Card>
+        <CardContent className="pt-5">
+          <WhyEvidence explain={latest.explanation ?? undefined} evidence={latest.explanation?.evidence} />
+        </CardContent>
+      </Card>
 
       {!!latest.disclaimers?.length && (
-        <Card className="bg-muted/40">
-          <CardContent className="pt-5">
-            <ul className="space-y-1 text-xs text-muted-foreground">
-              {latest.disclaimers.map((d, i) => (
-                <li key={i}>• {d}</li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
+        <section>
+          <h2 className="label mb-2">Standing limitations</h2>
+          <ul className="space-y-1 text-xs text-ink-faint">
+            {latest.disclaimers.map((d, i) => (
+              <li key={i} className="flex gap-2">
+                <span aria-hidden="true">—</span>
+                <span>{d}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
     </div>
   );
 }
 
-function describeOverall(conf: number, hs: any) {
+function headline(confidence: number, hs: any) {
+  if (confidence < 0.4) return "Not enough signal yet";
   const label = hs?.apparent_density?.label ?? hs?.crown_density?.label;
-  if (conf < 0.4) return "Not enough signal yet";
   if (!label) return "Baseline recorded";
-  return `Apparent: ${String(label).replace("apparent ", "")}`;
+  return `Apparent density reads ${String(label).replace(/^apparent |^crown appears /, "")}`;
 }
 
-function EmptyState() {
+function sheddingValue(trend: any) {
+  if (!trend || trend.trend === "insufficient_data") return "—";
+  return { increasing: "Rising", decreasing: "Falling", stable: "Steady" }[trend.trend as string] ?? "—";
+}
+
+function FirstRun() {
   return (
-    <div className="mx-auto max-w-2xl py-10 text-center">
-      <div className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-2xl bg-accent">
-        <Camera className="h-6 w-6 text-accent-foreground" />
-      </div>
-      <h1 className="text-2xl font-semibold tracking-tight">Start your first scan</h1>
-      <p className="mx-auto mt-2 max-w-md text-muted-foreground">
-        HairGPT guides you through 7 standardized views, checks image quality before analyzing, and tracks apparent
-        changes over time — with confidence and sources on every conclusion.
+    <div className="mx-auto max-w-2xl animate-rise py-8">
+      <p className="label">Getting started</p>
+      <h1 className="mt-3 text-4xl font-normal">
+        A measured reading of your hair, <em className="font-normal italic">with its uncertainty attached</em>.
+      </h1>
+      <p className="mt-4 max-w-[62ch] text-base text-ink-soft">
+        The assessment asks about your history first — the things a photo cannot show — then walks you through seven
+        standardized views. Every number it returns carries a confidence, and it will tell you plainly when a change
+        is too small to be real.
       </p>
-      <div className="mt-6 flex justify-center gap-3">
-        <Link href="/scan/hair">
-          <Button size="lg">
-            <Camera className="h-4 w-4" /> Begin hair scan
-          </Button>
+
+      <ol className="mt-8 divide-y border-y">
+        {[
+          ["Your history", "Onset, pattern, conditions, medications. This is what a clinician asks first."],
+          ["Safety check", "A handful of signs a camera cannot see. Any one of them routes you to a clinician."],
+          ["Seven views", "Guided capture with quality gating, so nothing unusable is ever analysed."],
+          ["The reading", "Observations, confidence, cited evidence, and what it cannot tell you."],
+        ].map(([title, body], i) => (
+          <li key={title} className="flex gap-4 py-4">
+            <span className="readout mt-0.5 text-sm text-ink-faint">{String(i + 1).padStart(2, "0")}</span>
+            <div>
+              <p className="font-medium">{title}</p>
+              <p className="mt-0.5 text-sm text-ink-soft">{body}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+
+      <div className="mt-8 flex flex-wrap gap-2">
+        <Link href="/assessment">
+          <Button size="lg">Begin assessment</Button>
         </Link>
-        <Link href="/skin">
+        <Link href="/scan/hair">
           <Button size="lg" variant="outline">
-            SkinGPT
+            Just take a scan
           </Button>
         </Link>
       </div>

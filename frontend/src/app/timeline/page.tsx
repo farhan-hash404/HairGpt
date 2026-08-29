@@ -27,7 +27,7 @@ function Timeline() {
     api.adherenceSummary().then(setAdherence).catch(() => setAdherence([]));
   }, []);
 
-  if (!data) return <p className="text-muted-foreground">Loading timeline…</p>;
+  if (!data) return <p className="text-ink-soft">Loading timeline…</p>;
 
   const series: Record<string, Point[]> = data.series ?? {};
   const hasAny = Object.values(series).some((s) => s.length > 0);
@@ -35,15 +35,15 @@ function Timeline() {
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight">Longitudinal timeline</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{data.disclaimer}</p>
+        <h1 className="text-2xl font-normal">Longitudinal timeline</h1>
+        <p className="mt-1 text-sm text-ink-soft">{data.disclaimer}</p>
       </header>
 
       {!hasAny ? (
         <Card>
-          <CardContent className="py-10 text-center text-muted-foreground">
+          <CardContent className="py-10 text-center text-ink-soft">
             No completed scans yet.{" "}
-            <Link href="/scan/hair" className="text-primary underline-offset-2 hover:underline">
+            <Link href="/scan/hair" className="text-accent underline-offset-2 hover:underline">
               Run your first scan
             </Link>{" "}
             to start the timeline.
@@ -68,16 +68,16 @@ function Timeline() {
               {data.treatments.map((t: any) => {
                 const a = adherence.find((x) => x.treatment_id === t.id);
                 return (
-                  <li key={t.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border p-3">
+                  <li key={t.id} className="flex flex-wrap items-center justify-between gap-2 rounded border p-3">
                     <div>
                       <p className="font-medium">{t.name}</p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-ink-soft">
                         {titleize(t.category)} · started {new Date(t.start_date).toLocaleDateString()}
                         {t.end_date ? ` · ended ${new Date(t.end_date).toLocaleDateString()}` : ""}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      {t.is_prescribed_by_clinician && <Badge variant="secondary">clinician-prescribed</Badge>}
+                      {t.is_prescribed_by_clinician && <Badge variant="neutral">clinician-prescribed</Badge>}
                       {a && <Badge>{a.adherence_pct}% adherence</Badge>}
                     </div>
                   </li>
@@ -85,9 +85,9 @@ function Timeline() {
               })}
             </ul>
           ) : (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-ink-soft">
               No treatments tracked.{" "}
-              <Link href="/treatments" className="text-primary underline-offset-2 hover:underline">
+              <Link href="/treatments" className="text-accent underline-offset-2 hover:underline">
                 Add one
               </Link>
               .
@@ -108,7 +108,7 @@ function Timeline() {
                 <Link href={`/scan/${s.session_id}/result`} className="hover:underline">
                   {new Date(s.date).toLocaleDateString()} · {titleize(s.domain)}
                 </Link>
-                <span className="text-muted-foreground tabular-nums">
+                <span className="text-ink-soft tabular-nums">
                   {s.overall_confidence !== null ? `${Math.round(s.overall_confidence * 100)}% conf` : "—"}
                 </span>
               </li>
@@ -160,16 +160,16 @@ function Sparkline({ kind, points }: { kind: string; points: Point[] }) {
         <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
           <div>
             <p className="font-medium">{titleize(kind)}</p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-ink-soft">
               latest: {last.label ?? last.value ?? "—"} · confidence {Math.round(last.confidence * 100)}%
             </p>
           </div>
-          {anyMock && <Badge variant="mock">mock · not validated</Badge>}
+          {anyMock && <Badge variant="flag">mock · not validated</Badge>}
         </div>
 
         <div className="relative">
           {/* Axis range labels — the zoom is always disclosed. */}
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex flex-col justify-between py-1 text-[10px] tabular-nums text-muted-foreground">
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex flex-col justify-between py-1 text-[10px] tabular-nums text-ink-soft">
             <span>{max.toFixed(3)}</span>
             <span>{min.toFixed(3)}</span>
           </div>
@@ -182,7 +182,7 @@ function Sparkline({ kind, points }: { kind: string; points: Point[] }) {
             <path
               d={path}
               fill="none"
-              stroke="hsl(var(--primary))"
+              stroke="hsl(var(--accent))"
               strokeWidth={2}
               strokeLinecap="round"
               strokeDasharray={anyMock ? "5 4" : undefined}
@@ -193,14 +193,14 @@ function Sparkline({ kind, points }: { kind: string; points: Point[] }) {
                 cx={x(i)}
                 cy={y(p.value ?? 0)}
                 r={3.5}
-                fill="hsl(var(--primary))"
+                fill="hsl(var(--accent))"
                 opacity={0.35 + p.confidence * 0.65}
               />
             ))}
           </svg>
         </div>
 
-        <p className="mt-1 text-[11px] text-muted-foreground">
+        <p className="mt-1 text-[11px] text-ink-soft">
           {points.length > 1 && (
             <>
               Change over {points.length} scans:{" "}

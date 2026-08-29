@@ -44,10 +44,10 @@ export type Observation = {
 
 /** How an observation's trustworthiness should be labelled. */
 export function modelTrustLabel(o: Pick<Observation, "is_mock" | "validated">):
-  | { variant: "mock"; text: string }
+  | { variant: "flag"; text: string }
   | null {
-  if (o.is_mock) return { variant: "mock", text: "mock · not validated" };
-  if (!o.validated) return { variant: "mock", text: "unvalidated model" };
+  if (o.is_mock) return { variant: "flag", text: "mock · not validated" };
+  if (!o.validated) return { variant: "flag", text: "unvalidated model" };
   return null;
 }
 
@@ -169,6 +169,12 @@ export const api = {
     return r;
   },
   me: () => request<{ user: any; consents: any[] }>("/auth/me"),
+  updateProfile: (body: {
+    display_name?: string | null;
+    fitzpatrick_self?: number | null;
+    year_of_birth?: number | null;
+    sex?: string | null;
+  }) => request<any>("/auth/me", { method: "PATCH", body: JSON.stringify(body) }),
   setConsent: (purpose: string, granted: boolean) =>
     request("/auth/consents", { method: "POST", body: JSON.stringify({ purpose, granted }) }),
 

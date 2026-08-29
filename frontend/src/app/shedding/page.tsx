@@ -75,8 +75,8 @@ function Shedding() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight">Shedding log</h1>
-        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+        <h1 className="text-2xl font-normal">Shedding log</h1>
+        <p className="mt-1 max-w-2xl text-sm text-ink-soft">
           You&apos;ll notice shedding long before a photo shows anything. Logging it takes a few seconds and gives your
           timeline an early signal — and your clinician something concrete.
         </p>
@@ -94,17 +94,17 @@ function Shedding() {
                 <button
                   key={c.value}
                   onClick={() => setContext(c.value)}
-                  className={`rounded-full border px-3 py-1.5 text-sm transition-colors ${
+                  className={`rounded border px-3 py-1.5 text-sm transition-colors ${
                     context === c.value
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:bg-muted"
+                      ? "border-accent bg-accent-wash text-accent"
+                      : "text-ink-soft hover:bg-surface-sunken"
                   }`}
                 >
                   {c.label}
                 </button>
               ))}
             </div>
-            <p className="mt-1.5 text-xs text-muted-foreground">
+            <p className="mt-1.5 text-xs text-ink-soft">
               Shedding is naturally much higher on wash days, so we only ever compare like with like.
             </p>
           </div>
@@ -116,10 +116,10 @@ function Shedding() {
                 <button
                   key={b.value}
                   onClick={() => setBucket(b.value)}
-                  className={`rounded-full border px-3 py-1.5 text-sm transition-colors ${
+                  className={`rounded border px-3 py-1.5 text-sm transition-colors ${
                     bucket === b.value
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:bg-muted"
+                      ? "border-accent bg-accent-wash text-accent"
+                      : "text-ink-soft hover:bg-surface-sunken"
                   }`}
                 >
                   {b.label}
@@ -136,7 +136,7 @@ function Shedding() {
               value={count}
               onChange={(e) => setCount(e.target.value)}
               placeholder="optional"
-              className="w-40 rounded-xl border bg-background px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="w-40 rounded border bg-surface px-3 py-2"
             />
           </label>
 
@@ -145,7 +145,7 @@ function Shedding() {
               {busy ? "Saving…" : "Log it"}
             </Button>
             {saved && (
-              <span className="flex items-center gap-1.5 text-sm text-primary">
+              <span className="flex items-center gap-1.5 text-sm text-accent">
                 <Check className="h-4 w-4" /> Logged
               </span>
             )}
@@ -161,7 +161,7 @@ function Shedding() {
         </CardHeader>
         <CardContent>
           {entries.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nothing logged yet.</p>
+            <p className="text-sm text-ink-soft">Nothing logged yet.</p>
           ) : (
             <>
               <ul className="divide-y">
@@ -172,8 +172,8 @@ function Shedding() {
                     <li key={e.id} className="flex items-center justify-between py-2.5 text-sm">
                       <span>{e.date ? new Date(e.date).toLocaleDateString() : "—"}</span>
                       <span className="flex items-center gap-2">
-                        <Badge variant="secondary">{titleize(e.context)}</Badge>
-                        <span className="tabular-nums text-muted-foreground">
+                        <Badge variant="neutral">{titleize(e.context)}</Badge>
+                        <span className="tabular-nums text-ink-soft">
                           {e.count !== null ? `${e.count} hairs` : e.bucket ? titleize(e.bucket) : "—"}
                         </span>
                       </span>
@@ -219,12 +219,12 @@ function ContextChart({ entries, context }: { entries: SheddingEntry[]; context:
     <div>
       <div className="mb-1 flex items-baseline justify-between text-xs">
         <span className="font-medium">{titleize(context)} days</span>
-        <span className="tabular-nums text-muted-foreground">
+        <span className="tabular-nums text-ink-soft">
           {min}–{max} hairs
         </span>
       </div>
       <svg viewBox={`0 0 ${w} ${h}`} className="h-16 w-full" role="img" aria-label={`${context} shedding over time`}>
-        <path d={path} fill="none" stroke="hsl(var(--primary))" strokeWidth={2} strokeLinecap="round" />
+        <path d={path} fill="none" stroke="hsl(var(--accent))" strokeWidth={2} strokeLinecap="round" />
       </svg>
     </div>
   );
@@ -232,10 +232,10 @@ function ContextChart({ entries, context }: { entries: SheddingEntry[]; context:
 
 function TrendCard({ trend, entries }: { trend: SheddingTrend; entries: SheddingEntry[] }) {
   const config = {
-    increasing: { icon: TrendingUp, tone: "text-[hsl(var(--caution))]", label: "Appears to be increasing" },
-    decreasing: { icon: TrendingDown, tone: "text-primary", label: "Appears to be decreasing" },
-    stable: { icon: Minus, tone: "text-muted-foreground", label: "No detectable change" },
-    insufficient_data: { icon: Minus, tone: "text-muted-foreground", label: "Not enough data yet" },
+    increasing: { icon: TrendingUp, tone: "text-caution", label: "Appears to be increasing" },
+    decreasing: { icon: TrendingDown, tone: "text-accent", label: "Appears to be decreasing" },
+    stable: { icon: Minus, tone: "text-ink-soft", label: "No detectable change" },
+    insufficient_data: { icon: Minus, tone: "text-ink-soft", label: "Not enough data yet" },
   }[trend.trend];
   const Icon = config.icon;
 
@@ -246,16 +246,16 @@ function TrendCard({ trend, entries }: { trend: SheddingTrend; entries: Shedding
           <Icon className={`h-4 w-4 ${config.tone}`} />
           {config.label}
         </CardTitle>
-        <p className="text-sm text-muted-foreground">{trend.trend_note}</p>
+        <p className="text-sm text-ink-soft">{trend.trend_note}</p>
       </CardHeader>
       <CardContent className="space-y-3">
         {Object.keys(trend.average_by_context).length > 0 && (
           <div className="grid gap-3 sm:grid-cols-2">
             {Object.entries(trend.average_by_context).map(([ctx, avg]) => (
-              <div key={ctx} className="rounded-xl border p-3">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">{titleize(ctx)}</p>
+              <div key={ctx} className="rounded border p-3">
+                <p className="text-xs uppercase tracking-wide text-ink-soft">{titleize(ctx)}</p>
                 <p className="mt-0.5 text-xl font-semibold tabular-nums">{avg}</p>
-                <p className="text-xs text-muted-foreground">average over {trend.window_days} days</p>
+                <p className="text-xs text-ink-soft">average over {trend.window_days} days</p>
               </div>
             ))}
           </div>
@@ -267,7 +267,7 @@ function TrendCard({ trend, entries }: { trend: SheddingTrend; entries: Shedding
           ))}
         </div>
 
-        <p className="text-xs text-muted-foreground">{trend.disclaimer}</p>
+        <p className="text-xs text-ink-soft">{trend.disclaimer}</p>
       </CardContent>
     </Card>
   );

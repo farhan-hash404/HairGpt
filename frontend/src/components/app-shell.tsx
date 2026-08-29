@@ -3,53 +3,54 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  Activity,
-  Camera,
-  ClipboardList,
-  FlaskConical,
-  LineChart,
-  MoreHorizontal,
-  Pill,
-  ScanFace,
-  Settings,
-  Sparkles,
-  Waves,
-} from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Primary nav stays short enough to never wrap; everything else lives behind
-// "More" so adding a feature doesn't degrade the header.
+/* Primary nav stays short enough never to wrap; the rest sits behind "More",
+   so adding a feature doesn't degrade the header. */
 const NAV = [
-  { href: "/", label: "Home", icon: Activity },
-  { href: "/scan/hair", label: "Hair scan", icon: Camera },
-  { href: "/shedding", label: "Shedding", icon: Waves },
-  { href: "/timeline", label: "Timeline", icon: LineChart },
-  { href: "/compare", label: "Compare", icon: Sparkles },
+  { href: "/", label: "Overview" },
+  { href: "/assessment", label: "Assessment" },
+  { href: "/shedding", label: "Shedding" },
+  { href: "/timeline", label: "Timeline" },
+  { href: "/compare", label: "Compare" },
 ];
 
 const MORE_NAV = [
-  { href: "/history", label: "Your history", icon: ClipboardList },
-  { href: "/treatments", label: "Treatments", icon: Pill },
-  { href: "/skin", label: "SkinGPT", icon: ScanFace },
-  { href: "/products", label: "Products", icon: FlaskConical },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/history", label: "Your history" },
+  { href: "/treatments", label: "Treatments" },
+  { href: "/skin", label: "SkinGPT" },
+  { href: "/products", label: "Products" },
+  { href: "/settings", label: "Settings & privacy" },
 ];
+
+function isActive(pathname: string, href: string) {
+  return href === "/" ? pathname === "/" : pathname.startsWith(href);
+}
+
+/** The wordmark doubles as the product's thesis: a measured reading, not a verdict. */
+function Wordmark() {
+  return (
+    <Link href="/" className="group flex items-baseline gap-2" aria-label="HairGPT home">
+      <span className="font-display text-xl font-semibold tracking-tight">HairGPT</span>
+      <span className="hidden select-none text-2xs uppercase tracking-[0.14em] text-ink-faint sm:inline">
+        observation, not diagnosis
+      </span>
+    </Link>
+  );
+}
 
 function MoreMenu({ pathname }: { pathname: string }) {
   const [open, setOpen] = React.useState(false);
   const ref = React.useRef<HTMLDivElement>(null);
   const active = MORE_NAV.some((item) => pathname.startsWith(item.href));
 
-  // Close on outside click and on Escape, so the menu never traps focus.
   React.useEffect(() => {
     if (!open) return;
-    function onPointerDown(e: MouseEvent) {
+    const onPointerDown = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    }
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
-    }
+    };
+    const onKeyDown = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
     document.addEventListener("mousedown", onPointerDown);
     document.addEventListener("keydown", onKeyDown);
     return () => {
@@ -65,30 +66,31 @@ function MoreMenu({ pathname }: { pathname: string }) {
         aria-expanded={open}
         aria-haspopup="menu"
         className={cn(
-          "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm transition-colors",
-          active ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-muted"
+          "flex items-center gap-1 rounded px-2.5 py-1.5 text-sm transition-colors",
+          active ? "text-ink" : "text-ink-soft hover:text-ink"
         )}
       >
-        <MoreHorizontal className="h-3.5 w-3.5" />
         More
+        <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", open && "rotate-180")} />
       </button>
       {open && (
         <div
           role="menu"
-          className="absolute right-0 top-full z-50 mt-2 w-52 overflow-hidden rounded-xl border bg-card p-1 shadow-lg"
+          className="panel absolute right-0 top-full z-50 mt-1.5 w-56 overflow-hidden p-1 shadow-lg"
         >
-          {MORE_NAV.map(({ href, label, icon: Icon }) => (
+          {MORE_NAV.map(({ href, label }) => (
             <Link
               key={href}
               href={href}
               role="menuitem"
               onClick={() => setOpen(false)}
               className={cn(
-                "flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors",
-                pathname.startsWith(href) ? "bg-accent text-accent-foreground" : "hover:bg-muted"
+                "block rounded px-2.5 py-2 text-sm transition-colors",
+                pathname.startsWith(href)
+                  ? "bg-accent-wash text-accent"
+                  : "text-ink-soft hover:bg-surface-sunken hover:text-ink"
               )}
             >
-              <Icon className="h-4 w-4" />
               {label}
             </Link>
           ))}
@@ -103,29 +105,29 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur">
-        <div className="container flex h-16 items-center justify-between gap-4">
-          <Link href="/" className="flex items-center gap-2">
-            <span className="grid h-8 w-8 place-items-center rounded-xl bg-primary text-primary-foreground">
-              <Activity className="h-4 w-4" />
-            </span>
-            <span className="text-lg font-semibold tracking-tight">HairGPT</span>
-          </Link>
-          <nav className="hidden items-center gap-1 md:flex" aria-label="Primary">
-            {NAV.map(({ href, label, icon: Icon }) => {
-              const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
+      <header className="sticky top-0 z-40 border-b bg-ground/85 backdrop-blur-md">
+        <div className="container flex h-14 items-center justify-between gap-6">
+          <Wordmark />
+
+          <nav className="hidden items-center gap-0.5 md:flex" aria-label="Primary">
+            {NAV.map(({ href, label }) => {
+              const active = isActive(pathname, href);
               return (
                 <Link
                   key={href}
                   href={href}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm transition-colors",
-                    active ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-muted"
+                    "relative rounded px-2.5 py-1.5 text-sm transition-colors",
+                    active ? "text-ink" : "text-ink-soft hover:text-ink"
                   )}
                 >
-                  <Icon className="h-3.5 w-3.5" />
                   {label}
+                  {/* The active marker is a rule, matching the calibration
+                      language used throughout the product. */}
+                  {active && (
+                    <span className="absolute inset-x-2.5 -bottom-[13px] h-px bg-accent" aria-hidden="true" />
+                  )}
                 </Link>
               );
             })}
@@ -134,35 +136,39 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      <main className="container flex-1 py-8">{children}</main>
+      <main className="container flex-1 py-10">{children}</main>
 
       {/* Mobile nav */}
       <nav
-        className="sticky bottom-0 z-40 grid grid-cols-5 border-t bg-background/95 backdrop-blur md:hidden"
+        className="sticky bottom-0 z-40 grid grid-cols-5 border-t bg-ground/95 backdrop-blur md:hidden"
         aria-label="Primary mobile"
       >
-        {NAV.slice(0, 5).map(({ href, label, icon: Icon }) => {
-          const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
+        {NAV.map(({ href, label }) => {
+          const active = isActive(pathname, href);
           return (
             <Link
               key={href}
               href={href}
+              aria-current={active ? "page" : undefined}
               className={cn(
-                "flex flex-col items-center gap-0.5 py-2 text-[10px]",
-                active ? "text-primary" : "text-muted-foreground"
+                "border-t-2 py-2.5 text-center text-2xs font-medium",
+                active ? "border-accent text-ink" : "border-transparent text-ink-faint"
               )}
             >
-              <Icon className="h-4 w-4" />
               {label}
             </Link>
           );
         })}
       </nav>
 
-      <footer className="border-t py-5">
-        <div className="container text-xs text-muted-foreground">
-          HairGPT provides image-based observations and AI inferences — <strong>not a medical diagnosis</strong>. It
-          never prescribes medication. Always consult a qualified clinician for diagnosis and treatment.
+      <footer className="border-t bg-surface-sunken">
+        <div className="container flex flex-col gap-2 py-6 text-xs text-ink-faint">
+          <p className="max-w-[68ch]">
+            HairGPT produces image-based observations and AI inferences —{" "}
+            <strong className="font-semibold text-ink-soft">not a medical diagnosis</strong>. It never prescribes
+            medication. The computer-vision models in this build are unvalidated heuristics.
+          </p>
+          <p>Always consult a qualified clinician for diagnosis and treatment.</p>
         </div>
       </footer>
     </div>

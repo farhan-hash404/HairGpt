@@ -23,6 +23,7 @@ from app.schemas.auth import (
     ConsentIn,
     ConsentOut,
     LoginIn,
+    ProfileIn,
     RefreshIn,
     RegisterIn,
     TokenOut,
@@ -109,6 +110,21 @@ def me(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
         "user": UserOut.model_validate(user),
         "consents": [ConsentOut.model_validate(c) for c in consents],
     }
+
+
+@router.patch("/me", response_model=UserOut)
+def update_me(body: ProfileIn, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Update the optional profile fields.
+
+    These exist for FAIRNESS STRATIFICATION — reporting model performance by
+    skin tone, age band and sex — and for nothing else. They are self-reported,
+    always optional, and never used for identification.
+    """
+    for field, value in body.model_dump(exclude_unset=True).items():
+        setattr(user, field, value)
+    db.commit()
+    db.refresh(user)
+    return user
 
 
 @router.get("/consents", response_model=list[ConsentOut])

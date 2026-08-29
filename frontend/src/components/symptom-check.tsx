@@ -88,10 +88,10 @@ export function SymptomCheck({
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
-          <ShieldAlert className="h-4 w-4 text-[hsl(var(--caution))]" />
+          <ShieldAlert className="h-4 w-4 text-caution" />
           Safety check
         </CardTitle>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-ink-soft">
           Photos can&apos;t show everything. Tick anything you&apos;ve noticed — these are things a clinician should look
           at, and we&apos;d rather send you to one than miss them.
         </p>
@@ -108,7 +108,7 @@ export function SymptomCheck({
           return (
             <label
               key={String(q.key)}
-              className="flex cursor-pointer items-start gap-3 rounded-xl border p-3 text-sm hover:bg-muted/40"
+              className="flex cursor-pointer items-start gap-3 rounded border p-3 text-sm hover:bg-surface-sunken"
             >
               <input
                 type="checkbox"
@@ -124,7 +124,7 @@ export function SymptomCheck({
                     onSkinChange({ ...skin, [q.key]: on } as SkinSymptoms);
                   }
                 }}
-                className="mt-0.5 h-4 w-4 accent-[hsl(var(--primary))]"
+                className="mt-0.5 h-4 w-4 accent-[hsl(var(--accent))]"
               />
               <span>{q.label}</span>
             </label>
@@ -132,9 +132,9 @@ export function SymptomCheck({
         })}
 
         {anyChecked && (
-          <div className="rounded-xl border border-destructive/40 bg-destructive/5 p-3 text-sm">
+          <div className="rounded border border-alert/40 bg-alert-wash p-3 text-sm">
             <p className="font-medium">We&apos;ll recommend seeing a clinician.</p>
-            <p className="mt-0.5 text-muted-foreground">
+            <p className="mt-0.5 text-ink-soft">
               Because you flagged something above, this scan will skip cosmetic and self-treatment suggestions and
               recommend professional evaluation instead.
             </p>

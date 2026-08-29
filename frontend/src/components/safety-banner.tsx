@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle2, Stethoscope } from "lucide-react";
+import { AlertTriangle, Check, Stethoscope } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type SafetyVerdict = {
@@ -9,52 +9,68 @@ export type SafetyVerdict = {
 };
 
 /**
- * When the deterministic safety layer returns "refer", this banner dominates the
- * screen and cosmetic recommendations are not rendered at all (the API does not
- * even return them).
+ * The safety verdict, given a severity stripe rather than a tinted card.
+ *
+ * When the deterministic layer returns "refer" this must dominate the screen —
+ * and the API has already withheld every cosmetic recommendation, so the banner
+ * states that plainly instead of leaving the reader to notice an absence.
  */
 export function SafetyBanner({ verdict }: { verdict: SafetyVerdict }) {
-  const map = {
+  const config = {
     ok: {
-      icon: CheckCircle2,
-      tone: "border-primary/30 bg-primary/5 text-foreground",
-      iconTone: "text-primary",
+      icon: Check,
+      stripe: "bg-ok",
+      tint: "bg-ok-wash",
+      tone: "text-ok",
       title: "No red flags detected",
     },
     caution: {
       icon: AlertTriangle,
-      tone: "border-[hsl(var(--caution))]/40 bg-[hsl(var(--caution))]/10 text-foreground",
-      iconTone: "text-[hsl(var(--caution))]",
+      stripe: "bg-caution",
+      tint: "bg-caution-wash",
+      tone: "text-caution",
       title: "Interpret with caution",
     },
     refer: {
       icon: Stethoscope,
-      tone: "border-destructive/40 bg-destructive/10 text-foreground",
-      iconTone: "text-destructive",
-      title: "Please see a clinician",
+      stripe: "bg-alert",
+      tint: "bg-alert-wash",
+      tone: "text-alert",
+      title: "See a clinician",
     },
-  } as const;
+  }[verdict.verdict] ?? {
+    icon: AlertTriangle,
+    stripe: "bg-caution",
+    tint: "bg-caution-wash",
+    tone: "text-caution",
+    title: "Interpret with caution",
+  };
 
-  const cfg = map[verdict.verdict] ?? map.caution;
-  const Icon = cfg.icon;
+  const Icon = config.icon;
 
   return (
-    <div className={cn("rounded-[var(--radius)] border p-5", cfg.tone)} role="status">
-      <div className="flex items-start gap-3">
-        <Icon className={cn("mt-0.5 h-5 w-5 shrink-0", cfg.iconTone)} />
-        <div className="min-w-0">
-          <p className="font-semibold">{cfg.title}</p>
-          <p className="mt-1 text-sm text-muted-foreground">{verdict.message}</p>
+    <div className={cn("panel flex overflow-hidden", config.tint)} role="status">
+      <span className={cn("w-1 shrink-0", config.stripe)} aria-hidden="true" />
+      <div className="flex flex-1 items-start gap-3 p-4">
+        <Icon className={cn("mt-0.5 h-4 w-4 shrink-0", config.tone)} aria-hidden="true" />
+        <div className="min-w-0 flex-1">
+          <p className={cn("font-display text-base font-medium", config.tone)}>{config.title}</p>
+          <p className="mt-1 max-w-[68ch] text-sm text-ink-soft">{verdict.message}</p>
+
           {verdict.suppressed_cosmetic && (
             <p className="mt-2 text-sm font-medium">
-              Self-treatment suggestions are intentionally withheld for this result.
+              Self-treatment suggestions are withheld for this result.
             </p>
           )}
+
           {!!verdict.red_flags?.length && (
-            <ul className="mt-2 flex flex-wrap gap-1.5">
-              {verdict.red_flags.map((f) => (
-                <li key={f} className="rounded-full border border-current/20 px-2 py-0.5 text-xs">
-                  {f.replace(/_/g, " ")}
+            <ul className="mt-3 flex flex-wrap gap-1.5">
+              {verdict.red_flags.map((flag) => (
+                <li
+                  key={flag}
+                  className="readout rounded border border-current/25 px-1.5 py-0.5 text-2xs text-ink-soft"
+                >
+                  {flag}
                 </li>
               ))}
             </ul>

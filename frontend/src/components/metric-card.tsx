@@ -1,59 +1,77 @@
 import Link from "next/link";
+import { ArrowUpRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
-import { ConfidenceRing } from "@/components/confidence-ring";
+import { ConfidenceScale } from "@/components/confidence";
 import { cn } from "@/lib/utils";
 
-export function MetricCard({
+/**
+ * A single instrument readout.
+ *
+ * The hierarchy is deliberate and inverted from a typical dashboard card: the
+ * field name is small, the measurement is large and set in mono, and the
+ * confidence sits directly beneath it rather than being tucked in a corner.
+ * A number this product cannot stand behind should never appear more
+ * authoritative than the caveat attached to it.
+ */
+export function Readout({
   label,
   value,
-  sublabel,
+  unit,
+  caption,
   confidence,
-  isMock,
+  flag,
   href,
-  tone = "default",
+  className,
 }: {
   label: string;
   value: string;
-  sublabel?: string;
+  unit?: string;
+  caption?: string;
   confidence?: number | null;
-  isMock?: boolean;
+  /** e.g. "unvalidated model" — rendered as a dashed caveat, not a status. */
+  flag?: string | null;
   href?: string;
-  tone?: "default" | "muted";
+  className?: string;
 }) {
-  const inner = (
-    <Card
+  const body = (
+    <div
       className={cn(
-        "flex h-full items-start justify-between gap-3 p-5 transition-shadow",
-        href && "hover:shadow-md",
-        tone === "muted" && "bg-muted/40"
+        "group flex h-full flex-col gap-3 p-4",
+        href && "transition-colors hover:bg-surface-sunken",
+        className
       )}
     >
-      <div className="min-w-0">
-        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
-        {/* Long qualitative labels (e.g. "crown appears sparse") get a smaller
-            size and wrap instead of being cut off mid-word. */}
-        <p className={cn("metric-number mt-1.5 break-words", value.length > 14 && "text-xl leading-snug")}>
+      <div className="flex items-start justify-between gap-2">
+        <span className="label">{label}</span>
+        {href && (
+          <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-ink-faint opacity-0 transition-opacity group-hover:opacity-100" />
+        )}
+      </div>
+
+      <div className="flex-1">
+        <p className="readout-lg break-words">
           {value}
+          {unit && <span className="ml-1 text-base font-normal text-ink-faint">{unit}</span>}
         </p>
-        {sublabel && <p className="mt-1 text-sm text-muted-foreground">{sublabel}</p>}
-        {isMock && (
-          <Badge variant="mock" className="mt-2">
-            mock model · not validated
+        {caption && <p className="mt-1 text-xs leading-snug text-ink-soft">{caption}</p>}
+        {flag && (
+          <Badge variant="flag" className="mt-2">
+            {flag}
           </Badge>
         )}
       </div>
+
       {confidence !== undefined && confidence !== null && (
-        <ConfidenceRing value={confidence} label={label} />
+        <ConfidenceScale value={confidence} label={label} size="sm" showBand={false} />
       )}
-    </Card>
+    </div>
   );
 
-  return href ? (
-    <Link href={href} className="block h-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-[var(--radius)]">
-      {inner}
+  if (!href) return <div className="panel h-full">{body}</div>;
+
+  return (
+    <Link href={href} className="panel block h-full rounded-lg">
+      {body}
     </Link>
-  ) : (
-    inner
   );
 }

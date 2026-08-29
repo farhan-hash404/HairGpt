@@ -1,39 +1,79 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
-  darkMode: ["class"],
+  // Theming is driven entirely by CSS variables (system + explicit override),
+  // so the `dark:` variant keys off the same data-theme attribute rather than a
+  // separate class that could drift out of sync with the tokens.
+  darkMode: ["variant", ['&:where([data-theme="dark"] *)', "@media (prefers-color-scheme: dark)"]],
   content: ["./src/**/*.{ts,tsx}"],
   theme: {
-    container: { center: true, padding: "1.5rem", screens: { "2xl": "1200px" } },
+    container: { center: true, padding: "1.5rem", screens: { "2xl": "1180px" } },
     extend: {
       colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
-        primary: { DEFAULT: "hsl(var(--primary))", foreground: "hsl(var(--primary-foreground))" },
-        secondary: { DEFAULT: "hsl(var(--secondary))", foreground: "hsl(var(--secondary-foreground))" },
-        muted: { DEFAULT: "hsl(var(--muted))", foreground: "hsl(var(--muted-foreground))" },
-        accent: { DEFAULT: "hsl(var(--accent))", foreground: "hsl(var(--accent-foreground))" },
-        destructive: { DEFAULT: "hsl(var(--destructive))", foreground: "hsl(var(--destructive-foreground))" },
-        card: { DEFAULT: "hsl(var(--card))", foreground: "hsl(var(--card-foreground))" },
-        caution: "hsl(var(--caution))",
+        ground: "hsl(var(--ground))",
+        surface: {
+          DEFAULT: "hsl(var(--surface))",
+          sunken: "hsl(var(--surface-sunken))",
+        },
+        ink: {
+          DEFAULT: "hsl(var(--ink))",
+          soft: "hsl(var(--ink-soft))",
+          faint: "hsl(var(--ink-faint))",
+        },
+        rule: {
+          DEFAULT: "hsl(var(--rule))",
+          strong: "hsl(var(--rule-strong))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          ink: "hsl(var(--accent-ink))",
+          wash: "hsl(var(--accent-wash))",
+          edge: "hsl(var(--accent-edge))",
+        },
+        ok: { DEFAULT: "hsl(var(--ok))", wash: "hsl(var(--ok-wash))" },
+        caution: { DEFAULT: "hsl(var(--caution))", wash: "hsl(var(--caution-wash))" },
+        alert: { DEFAULT: "hsl(var(--alert))", wash: "hsl(var(--alert-wash))" },
       },
+      borderColor: { DEFAULT: "hsl(var(--rule))" },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        DEFAULT: "var(--radius)",
+        md: "var(--radius)",
+        lg: "var(--radius-lg)",
       },
       fontFamily: {
+        display: ["var(--font-display)", "ui-serif", "Georgia", "serif"],
         sans: ["var(--font-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
+        mono: ["var(--font-mono)", "ui-monospace", "SFMono-Regular", "monospace"],
+      },
+      fontSize: {
+        // A deliberate scale; everything sits on it.
+        "2xs": ["0.6875rem", { lineHeight: "1rem" }],
+        xs: ["0.75rem", { lineHeight: "1.1rem" }],
+        sm: ["0.8125rem", { lineHeight: "1.35rem" }],
+        base: ["0.9375rem", { lineHeight: "1.6rem" }],
+        lg: ["1.0625rem", { lineHeight: "1.65rem" }],
+        xl: ["1.375rem", { lineHeight: "1.35" }],
+        "2xl": ["1.75rem", { lineHeight: "1.2" }],
+        "3xl": ["2.25rem", { lineHeight: "1.1" }],
+        "4xl": ["3rem", { lineHeight: "1.03" }],
       },
       keyframes: {
-        "fade-up": { from: { opacity: "0", transform: "translateY(6px)" }, to: { opacity: "1", transform: "none" } },
+        rise: {
+          from: { opacity: "0", transform: "translateY(8px)" },
+          to: { opacity: "1", transform: "none" },
+        },
+        sweep: {
+          from: { transform: "scaleX(0)" },
+          to: { transform: "scaleX(1)" },
+        },
       },
-      animation: { "fade-up": "fade-up .35s ease-out both" },
+      animation: {
+        rise: "rise .4s cubic-bezier(.2,.6,.2,1) both",
+        sweep: "sweep .7s cubic-bezier(.2,.7,.2,1) both",
+      },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [],
 };
+
 export default config;

@@ -41,6 +41,19 @@ class UserOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class ProfileIn(BaseModel):
+    """Optional self-reported profile.
+
+    Collected solely so model performance can be reported per subgroup, which
+    the fairness evaluation requires. Never used for identification.
+    """
+
+    display_name: str | None = Field(default=None, max_length=120)
+    fitzpatrick_self: int | None = Field(default=None, ge=1, le=6)
+    year_of_birth: int | None = Field(default=None, ge=1900, le=2026)
+    sex: str | None = Field(default=None, max_length=16)
+
+
 class ConsentIn(BaseModel):
     purpose: str
     granted: bool

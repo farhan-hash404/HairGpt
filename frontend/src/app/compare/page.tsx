@@ -52,8 +52,8 @@ function Compare() {
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight">Compare scans</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <h1 className="text-2xl font-normal">Compare scans</h1>
+        <p className="mt-1 text-sm text-ink-soft">
           Photos are aligned to a standardized frame before comparison. Apparent changes only — images cannot prove
           treatment efficacy.
         </p>
@@ -61,7 +61,7 @@ function Compare() {
 
       {scans.length < 2 ? (
         <Card>
-          <CardContent className="py-10 text-center text-muted-foreground">
+          <CardContent className="py-10 text-center text-ink-soft">
             You need at least two completed scans to compare.
           </CardContent>
         </Card>
@@ -77,7 +77,7 @@ function Compare() {
         </Card>
       )}
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {error && <p className="text-sm text-alert">{error}</p>}
 
       {result && (
         <>
@@ -102,7 +102,7 @@ function Compare() {
               {result.metrics?.length ? (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead className="text-left text-xs uppercase tracking-wide text-muted-foreground">
+                    <thead className="text-left text-xs uppercase tracking-wide text-ink-soft">
                       <tr>
                         <th className="py-2">Metric</th>
                         <th className="py-2">Before</th>
@@ -116,13 +116,13 @@ function Compare() {
                         <tr key={m.kind}>
                           <td className="py-2.5 font-medium">
                             {titleize(m.kind)}
-                            {m.is_mock && <Badge variant="mock" className="ml-2">mock</Badge>}
+                            {m.is_mock && <Badge variant="flag" className="ml-2">mock</Badge>}
                           </td>
                           <td className="py-2.5 tabular-nums">{m.before}</td>
                           <td className="py-2.5 tabular-nums">{m.after}</td>
                           <td className="py-2.5 tabular-nums">
                             {m.delta > 0 ? "+" : ""}
-                            {m.delta} <span className="text-xs text-muted-foreground">({m.direction.replace("_", " ")})</span>
+                            {m.delta} <span className="text-xs text-ink-soft">({m.direction.replace("_", " ")})</span>
                           </td>
                           <td className="py-2.5 tabular-nums">{Math.round(m.confidence * 100)}%</td>
                         </tr>
@@ -131,7 +131,7 @@ function Compare() {
                   </table>
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-ink-soft">
                   No comparable numeric metrics between these two scans.
                 </p>
               )}
@@ -142,10 +142,10 @@ function Compare() {
             </CardContent>
           </Card>
 
-          <Card className="border-[hsl(var(--caution))]/40 bg-[hsl(var(--caution))]/5">
+          <Card className="border-caution/40 bg-caution-wash">
             <CardContent className="pt-5">
               <p className="mb-2 text-sm font-medium">Limitations of this comparison</p>
-              <ul className="space-y-1 text-xs text-muted-foreground">
+              <ul className="space-y-1 text-xs text-ink-soft">
                 {result.limitations.map((l: string, i: number) => (
                   <li key={i}>• {l}</li>
                 ))}
@@ -175,7 +175,7 @@ function Select({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="rounded-xl border bg-background px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="rounded border bg-surface px-3 py-2"
       >
         {options.map((s) => (
           <option key={s.id} value={s.id}>

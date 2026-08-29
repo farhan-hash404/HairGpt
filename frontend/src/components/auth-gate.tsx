@@ -39,7 +39,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     refresh();
   }, [refresh]);
 
-  if (state === "loading") return <p className="text-muted-foreground">Loading…</p>;
+  if (state === "loading") return <p className="text-ink-soft">Loading…</p>;
   if (state === "anon") return <AuthForm onDone={refresh} />;
   if (state === "consent") return <ConsentForm consents={consents} onDone={refresh} />;
   return <>{children}</>;
@@ -71,11 +71,11 @@ function AuthForm({ onDone }: { onDone: () => void }) {
     <div className="mx-auto max-w-md py-10">
       <Card>
         <CardHeader>
-          <div className="mb-1 grid h-10 w-10 place-items-center rounded-xl bg-accent">
+          <div className="mb-1 grid h-10 w-10 place-items-center rounded bg-accent">
             <Lock className="h-4 w-4 text-accent-foreground" />
           </div>
           <CardTitle>{mode === "login" ? "Sign in to HairGPT" : "Create your account"}</CardTitle>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-ink-soft">
             Your photos are encrypted, never sold, and never used for facial recognition.
           </p>
         </CardHeader>
@@ -88,7 +88,7 @@ function AuthForm({ onDone }: { onDone: () => void }) {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-xl border bg-background px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="w-full rounded border bg-surface px-3 py-2"
               />
             </label>
             <label className="block text-sm">
@@ -99,17 +99,17 @@ function AuthForm({ onDone }: { onDone: () => void }) {
                 minLength={8}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-xl border bg-background px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="w-full rounded border bg-surface px-3 py-2"
               />
             </label>
-            {error && <p className="text-sm text-destructive">{error}</p>}
+            {error && <p className="text-sm text-alert">{error}</p>}
             <Button type="submit" disabled={busy} className="w-full">
               {busy ? "Please wait…" : mode === "login" ? "Sign in" : "Create account"}
             </Button>
           </form>
           <button
             onClick={() => setMode(mode === "login" ? "register" : "login")}
-            className="mt-4 w-full text-sm text-muted-foreground hover:text-foreground"
+            className="mt-4 w-full text-sm text-ink-soft hover:text-ink"
           >
             {mode === "login" ? "New here? Create an account" : "Already have an account? Sign in"}
           </button>
@@ -138,11 +138,11 @@ function ConsentForm({ consents, onDone }: { consents: Record<string, boolean>; 
     <div className="mx-auto max-w-lg py-10">
       <Card>
         <CardHeader>
-          <div className="mb-1 grid h-10 w-10 place-items-center rounded-xl bg-accent">
+          <div className="mb-1 grid h-10 w-10 place-items-center rounded bg-accent">
             <ShieldCheck className="h-4 w-4 text-accent-foreground" />
           </div>
           <CardTitle>Your consent</CardTitle>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-ink-soft">
             Nothing is analyzed until you agree. You can withdraw consent, export, or permanently delete your data at any
             time in Settings.
           </p>
@@ -167,7 +167,7 @@ function ConsentForm({ consents, onDone }: { consents: Record<string, boolean>; 
               />
             ))}
           </div>
-          <ul className="space-y-1 rounded-xl bg-muted/50 p-3 text-xs text-muted-foreground">
+          <ul className="space-y-1 rounded bg-surface-sunken p-3 text-xs text-ink-soft">
             <li>• We never run facial recognition or identity matching.</li>
             <li>• We never sell your images or use them for advertising.</li>
             <li>• Images are encrypted at rest and deletable on request.</li>
@@ -193,16 +193,16 @@ function ConsentRow({
   required?: boolean;
 }) {
   return (
-    <label className="flex cursor-pointer items-start gap-3 rounded-xl border p-3 text-sm hover:bg-muted/40">
+    <label className="flex cursor-pointer items-start gap-3 rounded border p-3 text-sm hover:bg-surface-sunken">
       <input
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="mt-0.5 h-4 w-4 accent-[hsl(var(--primary))]"
+        className="mt-0.5 h-4 w-4 accent-[hsl(var(--accent))]"
       />
       <span>
         {label}
-        {required && <span className="ml-2 text-xs text-muted-foreground">(required)</span>}
+        {required && <span className="ml-2 text-xs text-ink-soft">(required)</span>}
       </span>
     </label>
   );

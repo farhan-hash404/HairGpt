@@ -50,17 +50,17 @@ function Pane({
 }) {
   return (
     <Card className="overflow-hidden">
-      <div className="relative aspect-square bg-muted/60">{children}</div>
+      <div className="relative aspect-square bg-surface-sunken">{children}</div>
       <div className="p-3">
         <p className="text-sm font-medium">{title}</p>
-        {caption && <p className="mt-0.5 text-[11px] text-muted-foreground">{caption}</p>}
+        {caption && <p className="mt-0.5 text-[11px] text-ink-soft">{caption}</p>}
       </div>
     </Card>
   );
 }
 
 function Placeholder({ label }: { label: string }) {
-  return <div className="grid h-full place-items-center text-xs text-muted-foreground">{label}</div>;
+  return <div className="grid h-full place-items-center text-xs text-ink-soft">{label}</div>;
 }
 
 /**
@@ -153,8 +153,8 @@ export function ComparePanes({
   return (
     <div className="space-y-3">
       {view && (
-        <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-          <Badge variant="secondary">{titleize(view)} view</Badge>
+        <div className="flex flex-wrap items-center gap-2 text-sm text-ink-soft">
+          <Badge variant="neutral">{titleize(view)} view</Badge>
           <span>the same view is used for both scans</span>
         </div>
       )}
@@ -211,16 +211,16 @@ export function ComparePanes({
             step={0.01}
             value={overlayOpacity}
             onChange={(e) => setOverlayOpacity(Number(e.target.value))}
-            className="w-56 accent-[hsl(var(--primary))]"
+            className="w-56 accent-[hsl(var(--accent))]"
             aria-label="Blend between before and after"
           />
-          <span className="tabular-nums text-muted-foreground">
+          <span className="tabular-nums text-ink-soft">
             {Math.round((1 - overlayOpacity) * 100)}% before / {Math.round(overlayOpacity * 100)}% after
           </span>
         </label>
       )}
 
-      <p className="text-[11px] text-muted-foreground">
+      <p className="text-[11px] text-ink-soft">
         The difference map highlights where the two photos differ. Lighting, pose and camera changes also produce
         differences — it is a visual aid, not a measurement, and it cannot show that a treatment worked.
       </p>

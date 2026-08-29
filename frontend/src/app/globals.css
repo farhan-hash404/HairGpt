@@ -2,66 +2,199 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ---------------------------------------------------------------------------
+   HairGPT design tokens.
+
+   The product's identity is a measuring instrument that is candid about its own
+   uncertainty, so the system is built around legible data rather than brand
+   flourish: one deep cobalt carries all emphasis, semantic states stay separate
+   from it so severity never competes with the accent, and every measurement is
+   set in mono with tabular figures.
+
+   Theming covers three states, not two: an explicit choice stamps
+   data-theme on <html>, while the default "system" setting stamps nothing and
+   is resolved by prefers-color-scheme alone.
+--------------------------------------------------------------------------- */
+
 @layer base {
   :root {
-    --background: 210 40% 99%;
-    --foreground: 222 34% 12%;
-    --card: 0 0% 100%;
-    --card-foreground: 222 34% 12%;
-    --primary: 172 62% 34%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222 34% 20%;
-    --muted: 210 34% 96%;
-    --muted-foreground: 215 16% 47%;
-    --accent: 172 55% 94%;
-    --accent-foreground: 172 62% 24%;
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
-    --caution: 38 92% 50%;
-    --border: 214 28% 91%;
-    --input: 214 28% 91%;
-    --ring: 172 62% 34%;
-    --radius: 1rem;
+    /* Ground & surfaces — cool laboratory paper, not cream. */
+    --ground: 216 20% 97%;
+    --surface: 0 0% 100%;
+    --surface-sunken: 216 20% 95%;
+
+    /* Ink — near-black carrying a blue bias so it sits with the accent. */
+    --ink: 216 22% 9%;
+    --ink-soft: 213 10% 40%;
+    --ink-faint: 213 9% 56%;
+
+    /* Hairlines double as calibration marks, so they must stay visible. */
+    --rule: 214 16% 88%;
+    --rule-strong: 214 14% 78%;
+
+    /* One accent. Deep clinical cobalt. */
+    --accent: 209 80% 30%;
+    --accent-ink: 0 0% 100%;
+    --accent-wash: 209 70% 96%;
+    --accent-edge: 209 55% 82%;
+
+    /* Semantic states — deliberately not the accent hue. */
+    --ok: 154 39% 30%;
+    --ok-wash: 154 40% 95%;
+    --caution: 33 65% 36%;
+    --caution-wash: 36 75% 95%;
+    --alert: 358 60% 36%;
+    --alert-wash: 358 65% 96%;
+
+    --focus: 209 90% 45%;
+
+    /* Near-square. Rounded-everything is a tell. */
+    --radius: 4px;
+    --radius-lg: 6px;
   }
 
-  .dark {
-    --background: 222 40% 7%;
-    --foreground: 210 30% 96%;
-    --card: 222 34% 10%;
-    --card-foreground: 210 30% 96%;
-    --primary: 172 60% 45%;
-    --primary-foreground: 222 40% 7%;
-    --secondary: 217 30% 16%;
-    --secondary-foreground: 210 30% 96%;
-    --muted: 217 30% 15%;
-    --muted-foreground: 215 18% 62%;
-    --accent: 172 40% 18%;
-    --accent-foreground: 172 60% 78%;
-    --destructive: 0 62% 52%;
-    --destructive-foreground: 0 0% 100%;
-    --caution: 38 92% 55%;
-    --border: 217 28% 20%;
-    --input: 217 28% 20%;
-    --ring: 172 60% 45%;
+  /* System dark. Guarded so an explicit light choice still wins. */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: 216 28% 7%;
+      --surface: 215 24% 10%;
+      --surface-sunken: 216 26% 8%;
+
+      --ink: 213 25% 92%;
+      --ink-soft: 213 12% 66%;
+      --ink-faint: 213 10% 50%;
+
+      --rule: 214 18% 20%;
+      --rule-strong: 214 16% 30%;
+
+      --accent: 209 75% 62%;
+      --accent-ink: 216 30% 8%;
+      --accent-wash: 209 45% 16%;
+      --accent-edge: 209 40% 32%;
+
+      --ok: 154 42% 58%;
+      --ok-wash: 154 30% 14%;
+      --caution: 36 72% 62%;
+      --caution-wash: 33 40% 15%;
+      --alert: 358 68% 66%;
+      --alert-wash: 358 35% 16%;
+
+      --focus: 209 85% 62%;
+    }
+  }
+
+  /* Explicit dark choice wins over a light OS. */
+  :root[data-theme="dark"] {
+    --ground: 216 28% 7%;
+    --surface: 215 24% 10%;
+    --surface-sunken: 216 26% 8%;
+
+    --ink: 213 25% 92%;
+    --ink-soft: 213 12% 66%;
+    --ink-faint: 213 10% 50%;
+
+    --rule: 214 18% 20%;
+    --rule-strong: 214 16% 30%;
+
+    --accent: 209 75% 62%;
+    --accent-ink: 216 30% 8%;
+    --accent-wash: 209 45% 16%;
+    --accent-edge: 209 40% 32%;
+
+    --ok: 154 42% 58%;
+    --ok-wash: 154 30% 14%;
+    --caution: 36 72% 62%;
+    --caution-wash: 33 40% 15%;
+    --alert: 358 68% 66%;
+    --alert-wash: 358 35% 16%;
+
+    --focus: 209 85% 62%;
   }
 
   * {
-    @apply border-border;
+    border-color: hsl(var(--rule));
   }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
   body {
-    @apply bg-background text-foreground antialiased;
-    font-feature-settings: "cv11", "ss01";
+    /* Explicit ground: never inherit the host's. */
+    background: hsl(var(--ground));
+    color: hsl(var(--ink));
+    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+    font-feature-settings: "cv05", "ss01";
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display), ui-serif, Georgia, serif;
+    text-wrap: balance;
+    letter-spacing: -0.012em;
+  }
+
+  /* Digits line up in columns everywhere in this product. */
+  input[type="number"],
+  table {
+    font-variant-numeric: tabular-nums;
+  }
+
+  :focus-visible {
+    outline: 2px solid hsl(var(--focus));
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: hsl(var(--accent-wash));
+    color: hsl(var(--ink));
   }
 }
 
-@layer utilities {
-  /* Subtle premium surface used across metric cards. */
-  .surface {
-    @apply rounded-[var(--radius)] border bg-card shadow-[0_1px_2px_rgba(16,24,40,.04),0_1px_3px_rgba(16,24,40,.06)];
+@layer components {
+  /* A panel in the clinical record. Squared, hairlined, quietly raised. */
+  .panel {
+    background: hsl(var(--surface));
+    border: 1px solid hsl(var(--rule));
+    border-radius: var(--radius-lg);
   }
-  .metric-number {
-    @apply text-3xl font-semibold tracking-tight tabular-nums;
+
+  /* Measurements. Mono, tabular, tight. */
+  .readout {
+    font-family: var(--font-mono), ui-monospace, "SF Mono", monospace;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+
+  .readout-lg {
+    font-family: var(--font-mono), ui-monospace, "SF Mono", monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: 1.75rem;
+    line-height: 1.1;
+    letter-spacing: -0.035em;
+    font-weight: 500;
+  }
+
+  /* Small-caps label used for field names and section eyebrows. */
+  .label {
+    font-size: 0.6875rem;
+    line-height: 1;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: hsl(var(--ink-faint));
+  }
+
+  /* A hairline that reads as a measurement scale rather than a divider. */
+  .scale-rule {
+    height: 1px;
+    background: repeating-linear-gradient(
+      to right,
+      hsl(var(--rule-strong)) 0 1px,
+      transparent 1px 6px
+    );
   }
 }
 
@@ -70,6 +203,8 @@
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

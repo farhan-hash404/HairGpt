@@ -31,7 +31,18 @@ const VIEW_COACHING: Record<string, string> = {
 
 type Captured = Record<string, QualityReport>;
 
-export function GuidedCapture({ domain }: { domain: "hair" | "skin" }) {
+export function GuidedCapture({
+  domain,
+  /** Symptom answers already collected upstream (the assessment flow asks them
+   *  before capture). When provided, the in-component check is skipped so the
+   *  user is never asked the same safety questions twice. */
+  presetSymptoms,
+  onComplete,
+}: {
+  domain: "hair" | "skin";
+  presetSymptoms?: HairSymptoms;
+  onComplete?: (sessionId: string) => void;
+}) {
   const router = useRouter();
   const [sessionId, setSessionId] = React.useState<string | null>(null);
   const [views, setViews] = React.useState<string[]>([]);
@@ -44,8 +55,9 @@ export function GuidedCapture({ domain }: { domain: "hair" | "skin" }) {
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const streamRef = React.useRef<MediaStream | null>(null);
   const [cameraOn, setCameraOn] = React.useState(false);
-  const [hairSymptoms, setHairSymptoms] = React.useState<HairSymptoms>(EMPTY_HAIR);
+  const [hairSymptoms, setHairSymptoms] = React.useState<HairSymptoms>(presetSymptoms ?? EMPTY_HAIR);
   const [skinSymptoms, setSkinSymptoms] = React.useState<SkinSymptoms>(EMPTY_SKIN);
+  const symptomsCollectedUpstream = presetSymptoms !== undefined;
 
   // Ghost overlay: the previous scan's photo for this view, shown translucently
   // so repeat captures are framed the same way. This is the single biggest lever
@@ -160,7 +172,8 @@ export function GuidedCapture({ domain }: { domain: "hair" | "skin" }) {
         skin_symptoms: domain === "skin" ? skinSymptoms : null,
       });
       stopCamera();
-      router.push(`/scan/${sessionId}/result`);
+      if (onComplete) onComplete(sessionId);
+      else router.push(`/scan/${sessionId}/result`);
     } catch (e: any) {
       const d = e?.detail;
       setError(
@@ -178,40 +191,46 @@ export function GuidedCapture({ domain }: { domain: "hair" | "skin" }) {
   const allPassed = views.length > 0 && passedCount === views.length;
 
   return (
-    <div className="mx-auto max-w-3xl space-y-5">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">
-          {domain === "hair" ? "Guided hair & scalp scan" : "Guided facial scan"}
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {views.length} standardized views. Each photo passes an image-quality check before anything is analyzed.
-        </p>
-      </div>
+    <div className={cn("space-y-5", !onComplete && "mx-auto max-w-3xl")}>
+      {/* When embedded in the assessment, the surrounding step supplies the
+          heading — repeating it here would double the page title. */}
+      {!onComplete && (
+        <div>
+          <h1 className="text-2xl font-normal">
+            {domain === "hair" ? "Guided hair &amp; scalp scan" : "Guided facial scan"}
+          </h1>
+          <p className="mt-2 max-w-[62ch] text-sm text-ink-soft">
+            {views.length} standardized views. Each photo passes an image-quality check before anything is analysed.
+          </p>
+        </div>
+      )}
 
-      {/* Progress rail */}
-      <div className="flex flex-wrap gap-2">
+      {/* View rail */}
+      <ol className="flex flex-wrap gap-1.5">
         {views.map((v, i) => {
           const r = captured[v];
           const state = r?.overall_pass ? "pass" : r ? "fail" : i === current ? "current" : "todo";
           return (
-            <button
-              key={v}
-              onClick={() => setCurrent(i)}
-              className={cn(
-                "flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition-colors",
-                state === "pass" && "border-primary/40 bg-primary/10 text-primary",
-                state === "fail" && "border-destructive/40 bg-destructive/10 text-destructive",
-                state === "current" && "border-foreground/30 bg-muted font-medium",
-                state === "todo" && "text-muted-foreground"
-              )}
-            >
-              {state === "pass" && <Check className="h-3 w-3" />}
-              {state === "fail" && <AlertTriangle className="h-3 w-3" />}
-              {titleize(v)}
-            </button>
+            <li key={v}>
+              <button
+                onClick={() => setCurrent(i)}
+                aria-current={state === "current" ? "step" : undefined}
+                className={cn(
+                  "flex items-center gap-1.5 rounded border px-2.5 py-1 text-xs transition-colors",
+                  state === "pass" && "border-ok/40 bg-ok-wash text-ok",
+                  state === "fail" && "border-alert/40 bg-alert-wash text-alert",
+                  state === "current" && "border-accent bg-accent-wash font-medium text-accent",
+                  state === "todo" && "border-rule text-ink-faint hover:text-ink-soft"
+                )}
+              >
+                {state === "pass" && <Check className="h-3 w-3" aria-hidden="true" />}
+                {state === "fail" && <AlertTriangle className="h-3 w-3" aria-hidden="true" />}
+                {titleize(v)}
+              </button>
+            </li>
           );
         })}
-      </div>
+      </ol>
 
       {/* Camera / capture surface */}
       <Card className="overflow-hidden">
@@ -235,28 +254,30 @@ export function GuidedCapture({ domain }: { domain: "hair" | "skin" }) {
             <div className="h-[70%] w-[55%] rounded-[45%] border-2 border-dashed border-white/60" />
           </div>
 
-          {ghostUrl && (
-            <div className="absolute left-3 top-3 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-medium text-white">
-              Ghost: last scan
-            </div>
+          {ghostUrl && ghostOn && (
+            <p className="readout absolute left-3 top-3 rounded bg-black/65 px-2 py-1 text-2xs uppercase tracking-wider text-white">
+              Ghost · last scan
+            </p>
           )}
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-            <p className="text-sm font-medium text-white">{titleize(view ?? "")}</p>
-            <p className="text-xs text-white/80">{VIEW_COACHING[view] ?? "Center the region in the guide."}</p>
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent p-4">
+            <p className="font-display text-base text-white">{titleize(view ?? "")}</p>
+            <p className="mt-0.5 max-w-[46ch] text-xs text-white/85">
+              {VIEW_COACHING[view] ?? "Center the region in the guide."}
+            </p>
           </div>
           {!cameraOn && (
-            <div className="absolute inset-0 grid place-items-center bg-background/95">
+            <div className="absolute inset-0 grid place-items-center bg-surface/97">
               <div className="text-center">
                 <Button onClick={startCamera}>
                   <Camera className="h-4 w-4" /> Enable camera
                 </Button>
-                <p className="mt-3 text-xs text-muted-foreground">or upload a photo below</p>
+                <p className="mt-3 text-xs text-ink-faint">or upload a photo below</p>
               </div>
             </div>
           )}
         </div>
 
-        <CardContent className="flex flex-wrap items-center gap-3 pt-5">
+        <div className="flex flex-wrap items-center gap-2 border-t p-4">
           <Button onClick={capture} disabled={!cameraOn || busy}>
             <Camera className="h-4 w-4" /> {busy ? "Checking quality…" : "Capture"}
           </Button>
@@ -264,10 +285,10 @@ export function GuidedCapture({ domain }: { domain: "hair" | "skin" }) {
             <input
               type="file"
               accept="image/*"
-              className="hidden"
+              className="sr-only"
               onChange={(e) => e.target.files?.[0] && submitBlob(e.target.files[0])}
             />
-            <span className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-full border px-5 text-sm hover:bg-muted">
+            <span className="inline-flex h-9 cursor-pointer items-center gap-2 rounded border border-rule-strong px-4 text-sm hover:bg-surface-sunken">
               <Upload className="h-4 w-4" /> Upload photo
             </span>
           </label>
@@ -276,22 +297,22 @@ export function GuidedCapture({ domain }: { domain: "hair" | "skin" }) {
               <RefreshCw className="h-4 w-4" /> Retake
             </Button>
           )}
-        </CardContent>
+        </div>
 
         {ghostUrl && (
-          <div className="flex flex-wrap items-center gap-3 border-t bg-muted/40 px-5 py-3 text-sm">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t bg-surface-sunken px-4 py-3 text-sm">
             <label className="flex cursor-pointer items-center gap-2">
               <input
                 type="checkbox"
                 checked={ghostOn}
                 onChange={(e) => setGhostOn(e.target.checked)}
-                className="h-4 w-4 accent-[hsl(var(--primary))]"
+                className="h-4 w-4 accent-[hsl(var(--accent))]"
               />
               <span className="font-medium">Show last scan as a guide</span>
             </label>
             {ghostOn && (
               <label className="flex items-center gap-2">
-                <span className="text-muted-foreground">Opacity</span>
+                <span className="label">Opacity</span>
                 <input
                   type="range"
                   min={0.1}
@@ -299,24 +320,23 @@ export function GuidedCapture({ domain }: { domain: "hair" | "skin" }) {
                   step={0.05}
                   value={ghostOpacity}
                   onChange={(e) => setGhostOpacity(Number(e.target.value))}
-                  className="w-32 accent-[hsl(var(--primary))]"
+                  className="w-28 accent-[hsl(var(--accent))]"
                   aria-label="Ghost overlay opacity"
                 />
               </label>
             )}
-            <span className="text-xs text-muted-foreground">
-              Matching the ghost keeps your scans comparable over time.
-            </span>
+            <span className="text-xs text-ink-faint">Matching it keeps your scans comparable.</span>
           </div>
         )}
       </Card>
 
       {/* Quality feedback — the gate that blocks analysis */}
       {report && <QualityPanel report={report} />}
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {error && <p className="text-sm text-alert">{error}</p>}
 
-      {/* Safety check — shown once every view has passed, just before analysis. */}
-      {allPassed && (
+      {/* Safety check — shown once every view has passed, just before analysis.
+          Skipped when the assessment flow already asked these questions. */}
+      {allPassed && !symptomsCollectedUpstream && (
         <SymptomCheck
           domain={domain}
           hair={hairSymptoms}
@@ -326,12 +346,15 @@ export function GuidedCapture({ domain }: { domain: "hair" | "skin" }) {
         />
       )}
 
-      <div className="flex items-center justify-between gap-4 rounded-[var(--radius)] border bg-muted/40 p-4">
-        <p className="text-sm">
-          <span className="font-medium">{passedCount}</span> of {views.length} views passed quality
+      <div className="panel flex flex-wrap items-center justify-between gap-4 bg-surface-sunken p-4">
+        <p className="text-sm text-ink-soft">
+          <span className="readout font-medium text-ink">
+            {passedCount}/{views.length}
+          </span>{" "}
+          views passed quality
         </p>
         <Button onClick={runAnalysis} disabled={!allPassed || analyzing}>
-          {analyzing ? "Analyzing…" : "Analyze scan"}
+          {analyzing ? "Analysing…" : "Analyse scan"}
         </Button>
       </div>
     </div>
@@ -340,50 +363,57 @@ export function GuidedCapture({ domain }: { domain: "hair" | "skin" }) {
 
 function QualityPanel({ report }: { report: QualityReport }) {
   return (
-    <Card className={cn("border-2", report.overall_pass ? "border-primary/30" : "border-destructive/40")}>
-      <CardContent className="pt-5">
+    <div className="panel flex overflow-hidden">
+      {/* Severity stripe: pass/fail reads before any of the numbers do. */}
+      <span className={cn("w-1 shrink-0", report.overall_pass ? "bg-ok" : "bg-alert")} aria-hidden="true" />
+      <div className="min-w-0 flex-1 p-4">
         <div className="mb-3 flex flex-wrap items-center gap-2">
-          <Badge variant={report.overall_pass ? "default" : "destructive"}>
-            {report.overall_pass ? "Quality passed" : "Quality failed — not analyzed"}
+          <Badge variant={report.overall_pass ? "ok" : "alert"}>
+            {report.overall_pass ? "Quality passed" : "Failed — not analysed"}
           </Badge>
-          {report.is_mock && <Badge variant="mock">heuristic gate</Badge>}
-          <span className="text-xs text-muted-foreground">
+          {report.is_mock && <Badge variant="flag">heuristic gate</Badge>}
+          <span className="readout text-2xs text-ink-faint">
             gate confidence {Math.round(report.confidence.value * 100)}%
           </span>
         </div>
 
-        <dl className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
+        <dl className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3">
           <Stat label="Sharpness" value={report.blur_score} />
           <Stat label="Exposure" value={report.exposure_score} />
           <Stat label="Overexposed" value={report.overexposed_frac} invert />
           <Stat label="Distance" ok={report.distance_ok} />
           <Stat label="Angle" ok={report.angle_ok} />
           {report.scalp_visibility !== null && <Stat label="Scalp visible" value={report.scalp_visibility} />}
-          {/* Framing is a warning, never a blocker — see the note below. */}
+          {/* Framing warns, never blocks — see the note below. */}
           {report.framing_match !== null && (
             <Stat label="Matches last scan" value={report.framing_match} threshold={0.6} />
           )}
         </dl>
 
         {report.framing_match !== null && report.framing_match < 0.6 && (
-          <p className="mt-3 rounded-xl border border-[hsl(var(--caution))]/40 bg-[hsl(var(--caution))]/10 p-3 text-sm">
-            Framed differently from your last scan. This won&apos;t stop the analysis, but it will lower the confidence
-            of any before/after comparison.
+          <p className="mt-4 border-l-2 border-caution bg-caution-wash p-3 text-sm">
+            Framed differently from your last scan. This won&apos;t stop the analysis, but it lowers the confidence of
+            any before/after comparison.
           </p>
         )}
 
         {!!report.retake_guidance.length && (
-          <div className="mt-4 rounded-xl bg-muted/60 p-3">
-            <p className="mb-1 text-sm font-medium">How to fix it</p>
-            <ul className="ml-4 list-disc text-sm text-muted-foreground">
+          <div className="mt-4 border-t pt-3">
+            <p className="label mb-2">How to fix it</p>
+            <ul className="space-y-1 text-sm text-ink-soft">
               {report.retake_guidance.map((g, i) => (
-                <li key={i}>{g}</li>
+                <li key={i} className="flex gap-2">
+                  <span aria-hidden="true" className="text-ink-faint">
+                    —
+                  </span>
+                  <span>{g}</span>
+                </li>
               ))}
             </ul>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
@@ -404,8 +434,8 @@ function Stat({
     ok !== undefined ? ok : invert ? (value ?? 0) < 0.12 : (value ?? 0) > (threshold ?? 0.35);
   return (
     <div>
-      <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className={cn("font-medium tabular-nums", good ? "text-foreground" : "text-destructive")}>
+      <dt className="label">{label}</dt>
+      <dd className={cn("readout mt-0.5 text-sm font-medium", good ? "text-ink" : "text-alert")}>
         {ok !== undefined ? (ok ? "OK" : "Off") : `${Math.round((value ?? 0) * 100)}%`}
       </dd>
     </div>

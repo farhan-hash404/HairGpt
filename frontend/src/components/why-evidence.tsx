@@ -1,9 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { BookOpen, HelpCircle, X } from "lucide-react";
+import { ExternalLink, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { ConfidenceScale } from "@/components/confidence";
 import { cn } from "@/lib/utils";
 
 export type EvidenceRef = {
@@ -22,31 +22,12 @@ export type Explain = {
   limitations?: string[];
 };
 
-function Panel({
-  title,
-  onClose,
-  children,
-}: {
-  title: string;
-  onClose: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="mt-3 animate-fade-up rounded-xl border bg-muted/40 p-4 text-sm">
-      <div className="mb-2 flex items-center justify-between">
-        <span className="font-medium">{title}</span>
-        <button onClick={onClose} aria-label="Close" className="text-muted-foreground hover:text-foreground">
-          <X className="h-4 w-4" />
-        </button>
-      </div>
-      {children}
-    </div>
-  );
-}
-
 /**
- * Every major AI conclusion exposes "Why?" (observation, reasoning, confidence,
- * limitations) and "Evidence" (traceable medical sources). Required by design.
+ * Every major AI conclusion exposes its reasoning and its sources.
+ *
+ * These are rendered as plain text buttons rather than pill buttons: they are
+ * disclosure controls on a document, and making them look like calls to action
+ * would compete with the actual next steps on the page.
  */
 export function WhyEvidence({
   explain,
@@ -59,91 +40,122 @@ export function WhyEvidence({
 }) {
   const [open, setOpen] = React.useState<"why" | "evidence" | null>(null);
 
+  const tab = (id: "why" | "evidence", label: string, count?: number) => (
+    <button
+      onClick={() => setOpen(open === id ? null : id)}
+      aria-expanded={open === id}
+      className={cn(
+        "border-b-2 pb-1 text-sm transition-colors",
+        open === id ? "border-accent text-ink" : "border-transparent text-ink-soft hover:text-ink"
+      )}
+    >
+      {label}
+      {count !== undefined && count > 0 && (
+        <span className="readout ml-1.5 text-2xs text-ink-faint">{count}</span>
+      )}
+    </button>
+  );
+
   return (
-    <div className={cn("", className)}>
-      <div className="flex flex-wrap gap-2">
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => setOpen(open === "why" ? null : "why")}
-          aria-expanded={open === "why"}
-        >
-          <HelpCircle className="h-3.5 w-3.5" /> Why?
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => setOpen(open === "evidence" ? null : "evidence")}
-          aria-expanded={open === "evidence"}
-        >
-          <BookOpen className="h-3.5 w-3.5" /> Evidence
-          {evidence?.length ? <span className="ml-1 opacity-60">({evidence.length})</span> : null}
-        </Button>
+    <div className={className}>
+      <div className="flex items-center gap-5">
+        {tab("why", "Why?")}
+        {tab("evidence", "Evidence", evidence?.length ?? 0)}
       </div>
 
       {open === "why" && (
-        <Panel title="Why we're showing this" onClose={() => setOpen(null)}>
+        <Panel onClose={() => setOpen(null)}>
           {explain?.observation && (
-            <p className="mb-2 whitespace-pre-line">
-              <span className="font-medium">Observation: </span>
-              {explain.observation}
-            </p>
+            <Field name="Observation">
+              <span className="whitespace-pre-line">{explain.observation}</span>
+            </Field>
           )}
-          {explain?.reasoning && (
-            <p className="mb-2">
-              <span className="font-medium">Reasoning: </span>
-              {explain.reasoning}
-            </p>
-          )}
+          {explain?.reasoning && <Field name="Reasoning">{explain.reasoning}</Field>}
           {explain?.confidence && (
-            <p className="mb-2">
-              <span className="font-medium">Confidence: </span>
-              {Math.round(explain.confidence.value * 100)}% — {explain.confidence.basis}
-            </p>
+            <Field name="Confidence">
+              <ConfidenceScale value={explain.confidence.value} showBand={false} className="max-w-xs" />
+              <p className="mt-1 text-xs text-ink-faint">{explain.confidence.basis}</p>
+            </Field>
           )}
           {!!explain?.limitations?.length && (
-            <>
-              <p className="font-medium">Limitations</p>
-              <ul className="ml-4 list-disc text-muted-foreground">
+            <Field name="Limitations">
+              <ul className="space-y-1">
                 {explain.limitations.map((l, i) => (
-                  <li key={i}>{l}</li>
+                  <li key={i} className="flex gap-2">
+                    <span aria-hidden="true" className="text-ink-faint">
+                      —
+                    </span>
+                    <span>{l}</span>
+                  </li>
                 ))}
               </ul>
-            </>
+            </Field>
           )}
         </Panel>
       )}
 
       {open === "evidence" && (
-        <Panel title="Sources behind this guidance" onClose={() => setOpen(null)}>
+        <Panel onClose={() => setOpen(null)}>
           {evidence?.length ? (
-            <ul className="space-y-2">
+            <ul className="divide-y">
               {evidence.map((e) => (
-                <li key={e.id} className="rounded-lg border bg-background p-3">
-                  <div className="mb-1 flex flex-wrap items-center gap-2">
-                    <Badge variant="secondary">{e.source.replace(/_/g, " ")}</Badge>
-                    {/* Only show the grade when it adds information beyond the source name. */}
+                <li key={e.id} className="py-3 first:pt-0 last:pb-0">
+                  <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
+                    <Badge variant="neutral">{e.source.replace(/_/g, " ")}</Badge>
                     {e.evidence_grade && e.evidence_grade !== e.source && (
-                      <Badge variant="outline">{e.evidence_grade.replace(/_/g, " ")}</Badge>
+                      <Badge variant="flag">{e.evidence_grade.replace(/_/g, " ")}</Badge>
                     )}
                   </div>
-                  <a href={e.url} target="_blank" rel="noreferrer" className="font-medium underline-offset-2 hover:underline">
+                  <a
+                    href={e.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="group inline-flex items-baseline gap-1.5 font-medium underline-offset-4 hover:underline"
+                  >
                     {e.title}
+                    <ExternalLink className="h-3 w-3 shrink-0 self-center text-ink-faint" aria-hidden="true" />
                   </a>
-                  <div className="text-xs text-muted-foreground">{e.publisher}</div>
+                  <p className="mt-0.5 text-xs text-ink-faint">{e.publisher}</p>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="text-muted-foreground">
+            <p className="text-sm text-ink-soft">
               No medical sources attached — this item is general wellness information, not medical evidence.
             </p>
           )}
-          <p className="mt-3 text-xs text-muted-foreground">
-            Sources are limited to AAD, FDA, NICE, NHS, and peer-reviewed dermatology literature. Social media is never used.
+          <p className="mt-4 border-t pt-3 text-xs text-ink-faint">
+            Sources are limited to AAD, FDA, NICE, NHS, and peer-reviewed dermatology literature. Social media is
+            never used.
           </p>
         </Panel>
       )}
+    </div>
+  );
+}
+
+function Panel({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
+  return (
+    <div className="mt-3 animate-rise border-l-2 border-accent-edge bg-surface-sunken p-4 text-sm">
+      <div className="flex justify-end">
+        <button
+          onClick={onClose}
+          aria-label="Close"
+          className="-mr-1 -mt-1 rounded p-1 text-ink-faint hover:text-ink"
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+      </div>
+      <div className="-mt-4 space-y-4">{children}</div>
+    </div>
+  );
+}
+
+function Field({ name, children }: { name: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <p className="label mb-1.5">{name}</p>
+      <div className="text-ink-soft [&_strong]:text-ink">{children}</div>
     </div>
   );
 }

@@ -101,8 +101,8 @@ function History() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight">Your history</h1>
-        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+        <h1 className="text-2xl font-normal">Your history</h1>
+        <p className="mt-1 max-w-2xl text-sm text-ink-soft">
           Photos can&apos;t show thyroid problems, low iron, or a medication side effect — yet these are among the most
           common and most treatable causes of hair loss. A few minutes here makes everything else more useful.
         </p>
@@ -189,13 +189,13 @@ function History() {
           {form.medications.map((m) => (
             <span
               key={m}
-              className="inline-flex items-center gap-1.5 rounded-full border bg-muted/50 px-3 py-1 text-sm"
+              className="inline-flex items-center gap-1.5 rounded border bg-surface-sunken px-3 py-1 text-sm"
             >
               {m}
               <button
                 onClick={() => set("medications", form.medications.filter((x) => x !== m))}
                 aria-label={`Remove ${m}`}
-                className="text-muted-foreground hover:text-foreground"
+                className="text-ink-soft hover:text-ink"
               >
                 <X className="h-3 w-3" />
               </button>
@@ -213,7 +213,7 @@ function History() {
               }
             }}
             placeholder="e.g. levothyroxine"
-            className="flex-1 rounded-xl border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="flex-1 rounded border bg-surface px-3 py-2 text-sm"
           />
           <Button type="button" variant="outline" onClick={addMedication}>
             <Plus className="h-4 w-4" /> Add
@@ -221,12 +221,12 @@ function History() {
         </div>
 
         {flagged.length > 0 && (
-          <div className="rounded-xl border border-[hsl(var(--caution))]/40 bg-[hsl(var(--caution))]/10 p-3 text-sm">
+          <div className="rounded border border-caution/40 bg-caution-wash p-3 text-sm">
             <p className="flex items-center gap-2 font-medium">
-              <AlertTriangle className="h-4 w-4 text-[hsl(var(--caution))]" />
+              <AlertTriangle className="h-4 w-4 text-caution" />
               Worth raising with your prescriber
             </p>
-            <p className="mt-1 text-muted-foreground">
+            <p className="mt-1 text-ink-soft">
               {flagged.join(", ")} {flagged.length === 1 ? "has" : "have"} a documented association with hair shedding.
               That does <strong>not</strong> mean it caused yours.{" "}
               <strong>Never stop a prescribed medication because of an app</strong> — bring it up with whoever prescribed it.
@@ -263,7 +263,7 @@ function History() {
           onChange={(e) => set("notes", e.target.value)}
           rows={3}
           placeholder="Anything you'd want a clinician to know."
-          className="w-full rounded-xl border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="w-full rounded border bg-surface px-3 py-2 text-sm"
         />
       </Section>
 
@@ -272,14 +272,14 @@ function History() {
           {busy ? "Saving…" : "Save history"}
         </Button>
         {saved && (
-          <span className="flex items-center gap-1.5 text-sm text-primary">
+          <span className="flex items-center gap-1.5 text-sm text-accent">
             <Check className="h-4 w-4" /> Saved
           </span>
         )}
       </div>
 
-      <Card className="bg-muted/40">
-        <CardContent className="flex gap-3 pt-5 text-xs text-muted-foreground">
+      <Card className="bg-surface-sunken">
+        <CardContent className="flex gap-3 pt-5 text-xs text-ink-soft">
           <Stethoscope className="mt-0.5 h-4 w-4 shrink-0" />
           <p>
             Everything here is self-reported and recorded as such. HairGPT does not diagnose — this history is used to
@@ -297,7 +297,7 @@ function Section({ title, hint, children }: { title: string; hint?: string; chil
     <Card>
       <CardHeader>
         <CardTitle className="text-base">{title}</CardTitle>
-        {hint && <p className="text-sm text-muted-foreground">{hint}</p>}
+        {hint && <p className="text-sm text-ink-soft">{hint}</p>}
       </CardHeader>
       <CardContent className="space-y-3">{children}</CardContent>
     </Card>
@@ -314,12 +314,12 @@ function CheckRow({
   onChange: (v: boolean) => void;
 }) {
   return (
-    <label className="flex cursor-pointer items-center gap-3 rounded-xl border p-3 text-sm hover:bg-muted/40">
+    <label className="flex cursor-pointer items-center gap-3 rounded border p-3 text-sm hover:bg-surface-sunken">
       <input
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="h-4 w-4 accent-[hsl(var(--primary))]"
+        className="h-4 w-4 accent-[hsl(var(--accent))]"
       />
       {label}
     </label>
@@ -346,10 +346,10 @@ function ChoiceRow({
             key={o.value}
             type="button"
             onClick={() => onChange(o.value)}
-            className={`rounded-full border px-3 py-1.5 text-sm transition-colors ${
+            className={`rounded border px-3 py-1.5 text-sm transition-colors ${
               value === o.value
-                ? "border-primary bg-primary/10 text-primary"
-                : "text-muted-foreground hover:bg-muted"
+                ? "border-accent bg-accent-wash text-accent"
+                : "text-ink-soft hover:bg-surface-sunken"
             }`}
           >
             {o.label}
@@ -377,7 +377,7 @@ function NumberRow({
         min={0}
         value={value ?? ""}
         onChange={(e) => onChange(e.target.value === "" ? null : Number(e.target.value))}
-        className="w-32 rounded-xl border bg-background px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="w-32 rounded border bg-surface px-3 py-2"
       />
     </label>
   );

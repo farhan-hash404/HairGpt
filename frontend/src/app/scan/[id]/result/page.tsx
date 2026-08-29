@@ -9,7 +9,7 @@ import { AuthGate } from "@/components/auth-gate";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ConfidenceRing } from "@/components/confidence-ring";
+import { ConfidenceChip, ConfidenceScale } from "@/components/confidence";
 import { SafetyBanner } from "@/components/safety-banner";
 import { WhyEvidence } from "@/components/why-evidence";
 import { titleize } from "@/lib/utils";
@@ -93,8 +93,8 @@ function Result() {
     api.result(id).then(setData).catch((e) => setError(e?.message ?? "Could not load result"));
   }, [id]);
 
-  if (error) return <p className="text-destructive">{error}</p>;
-  if (!data) return <p className="text-muted-foreground">Loading your analysis…</p>;
+  if (error) return <p className="text-alert">{error}</p>;
+  if (!data) return <p className="text-ink-soft">Loading your analysis…</p>;
 
   const referred = data.safety_verdict?.verdict === "refer";
 
@@ -102,17 +102,17 @@ function Result() {
     <div className="mx-auto max-w-4xl space-y-6">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <p className="text-xs font-medium uppercase tracking-wide text-ink-soft">
             {data.domain === "hair" ? "Hair & scalp analysis" : "Skin analysis"}
           </p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight">Your results</h1>
-          <p className="mt-1 text-sm text-muted-foreground">{data.explanation?.summary}</p>
+          <h1 className="mt-1 text-2xl font-normal">Your results</h1>
+          <p className="mt-1 text-sm text-ink-soft">{data.explanation?.summary}</p>
         </div>
         <div className="flex items-center gap-3">
-          <ConfidenceRing value={data.overall_confidence} size={64} label="overall" />
+          <ConfidenceScale value={data.overall_confidence} label="overall" className="w-40" />
           <div className="text-sm">
             <p className="font-medium">Overall confidence</p>
-            <p className="text-muted-foreground">
+            <p className="text-ink-soft">
               {data.overall_confidence < 0.5 ? "low — interpret cautiously" : "moderate"}
             </p>
           </div>
@@ -128,7 +128,7 @@ function Result() {
           </CardHeader>
           <CardContent>
             <p className="metric-number">{data.skin_appearance_index}</p>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-1 text-sm text-ink-soft">
               A transparent composite of apparent attributes (0–100). Not a clinical score.
             </p>
           </CardContent>
@@ -138,22 +138,22 @@ function Result() {
       {/* Observations — aggregated across views, with the per-view spread shown
           so a single number never hides disagreement between images. */}
       <section>
-        <h2 className="mb-3 text-lg font-semibold tracking-tight">What the images appear to show</h2>
+        <h2 className="mb-3 text-lg font-medium">What the images appear to show</h2>
         <div className="grid gap-3 sm:grid-cols-2">
           {groupObservations(data.observations).map((g) => (
             <Card key={g.kind} className="p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="font-medium">{titleize(g.kind)}</p>
-                  <p className="mt-0.5 text-sm text-muted-foreground">{g.display}</p>
+                  <p className="mt-0.5 text-sm text-ink-soft">{g.display}</p>
                   {g.count > 1 && (
-                    <p className="mt-0.5 text-xs text-muted-foreground">
+                    <p className="mt-0.5 text-xs text-ink-soft">
                       across {g.count} views
                       {g.spread !== null && ` · range ${g.min?.toFixed(3)}–${g.max?.toFixed(3)}`}
                     </p>
                   )}
                   <div className="mt-2 flex flex-wrap gap-1.5">
-                    <Badge variant={g.observationType === "visual_observation" ? "secondary" : "outline"}>
+                    <Badge variant={g.observationType === "visual_observation" ? "neutral" : "default"}>
                       {g.observationType === "visual_observation" ? "visual observation" : "AI inference"}
                     </Badge>
                     {(() => {
@@ -161,9 +161,9 @@ function Result() {
                       return trust ? <Badge variant={trust.variant}>{trust.text}</Badge> : null;
                     })()}
                   </div>
-                  <p className="mt-2 text-xs text-muted-foreground">{g.basis}</p>
+                  <p className="mt-2 text-xs text-ink-soft">{g.basis}</p>
                 </div>
-                <ConfidenceRing value={g.confidence} label={g.kind} />
+                <ConfidenceChip value={g.confidence} />
               </div>
             </Card>
           ))}
@@ -172,7 +172,7 @@ function Result() {
 
       {/* Recommendations — suppressed entirely when the safety layer says refer */}
       <section>
-        <h2 className="mb-3 text-lg font-semibold tracking-tight">
+        <h2 className="mb-3 text-lg font-medium">
           {referred ? "Next step" : "Suggested next steps"}
         </h2>
         <div className="space-y-3">
@@ -180,17 +180,17 @@ function Result() {
             <Card key={i}>
               <CardContent className="pt-5">
                 <div className="mb-2 flex flex-wrap items-center gap-2">
-                  <Badge variant={r.type === "referral" ? "destructive" : r.requires_clinician ? "caution" : "default"}>
+                  <Badge variant={r.type === "referral" ? "alert" : r.requires_clinician ? "caution" : "default"}>
                     {titleize(r.type)}
                   </Badge>
                   {r.requires_clinician && (
-                    <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                    <span className="inline-flex items-center gap-1 text-xs text-ink-soft">
                       <Stethoscope className="h-3 w-3" /> clinician involvement recommended
                     </span>
                   )}
                 </div>
                 <p className="font-medium">{r.title}</p>
-                <p className="mt-1 text-sm text-muted-foreground">{r.body}</p>
+                <p className="mt-1 text-sm text-ink-soft">{r.body}</p>
                 <div className="mt-3">
                   <WhyEvidence
                     explain={{
@@ -226,10 +226,10 @@ function Result() {
         </Link>
       </div>
 
-      <Card className="bg-muted/40">
+      <Card className="bg-surface-sunken">
         <CardContent className="pt-5">
           <p className="mb-2 text-sm font-medium">Limitations &amp; disclaimers</p>
-          <ul className="space-y-1 text-xs text-muted-foreground">
+          <ul className="space-y-1 text-xs text-ink-soft">
             {[...(data.explanation?.limitations ?? []), ...data.disclaimers].map((d, i) => (
               <li key={i}>• {d}</li>
             ))}

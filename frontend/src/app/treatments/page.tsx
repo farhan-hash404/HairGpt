@@ -37,8 +37,8 @@ function Treatments() {
     <div className="mx-auto max-w-3xl space-y-6">
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Treatment tracker</h1>
-          <p className="mt-1 max-w-xl text-sm text-muted-foreground">
+          <h1 className="text-2xl font-normal">Treatment tracker</h1>
+          <p className="mt-1 max-w-xl text-sm text-ink-soft">
             Record what you and your clinician have decided. HairGPT never prescribes medication — it only tracks what
             you enter and helps you prepare for clinical conversations.
           </p>
@@ -53,7 +53,7 @@ function Treatments() {
       <div className="space-y-3">
         {items.length === 0 && !adding && (
           <Card>
-            <CardContent className="py-10 text-center text-muted-foreground">
+            <CardContent className="py-10 text-center text-ink-soft">
               Nothing tracked yet. Add a medication, topical, shampoo, or procedure.
             </CardContent>
           </Card>
@@ -66,13 +66,13 @@ function Treatments() {
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="font-medium">{t.name}</p>
-                    <Badge variant="secondary">{titleize(t.category)}</Badge>
+                    <Badge variant="neutral">{titleize(t.category)}</Badge>
                     {t.is_prescribed_by_clinician && <Badge>clinician-prescribed</Badge>}
                   </div>
-                  <p className="mt-1 text-sm text-muted-foreground">
+                  <p className="mt-1 text-sm text-ink-soft">
                     {[t.dose, t.frequency].filter(Boolean).join(" · ") || "No dose/frequency recorded"}
                   </p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
+                  <p className="mt-0.5 text-xs text-ink-soft">
                     since {new Date(t.start_date).toLocaleDateString()}
                     {a ? ` · ${a.adherence_pct}% adherence (${a.window_days}d)` : ""}
                   </p>
@@ -96,8 +96,8 @@ function Treatments() {
         })}
       </div>
 
-      <Card className="bg-muted/40">
-        <CardContent className="pt-5 text-xs text-muted-foreground">
+      <Card className="bg-surface-sunken">
+        <CardContent className="pt-5 text-xs text-ink-soft">
           If a treatment is prescription-only, it must come from a qualified clinician. HairGPT will never tell you to
           start, stop, or change a prescription medication or its dose.
         </CardContent>
@@ -140,7 +140,7 @@ function AddForm({ onSaved }: { onSaved: () => void }) {
             <select
               value={form.category}
               onChange={(e) => setForm({ ...form, category: e.target.value })}
-              className="w-full rounded-xl border bg-background px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="w-full rounded border bg-surface px-3 py-2"
             >
               {CATEGORIES.map((c) => (
                 <option key={c} value={c}>
@@ -156,7 +156,7 @@ function AddForm({ onSaved }: { onSaved: () => void }) {
               type="checkbox"
               checked={form.is_prescribed_by_clinician}
               onChange={(e) => setForm({ ...form, is_prescribed_by_clinician: e.target.checked })}
-              className="h-4 w-4 accent-[hsl(var(--primary))]"
+              className="h-4 w-4 accent-[hsl(var(--accent))]"
             />
             This was prescribed by my clinician
           </label>
@@ -189,7 +189,7 @@ function Field({
         required={required}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-xl border bg-background px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="w-full rounded border bg-surface px-3 py-2"
       />
     </label>
   );

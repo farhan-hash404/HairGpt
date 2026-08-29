@@ -37,8 +37,8 @@ function Products() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight">Product intelligence</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <h1 className="text-2xl font-normal">Product intelligence</h1>
+        <p className="mt-1 text-sm text-ink-soft">
           Ingredient-aware, evidence-gated suggestions. Ranking never uses affiliate revenue — the system has no
           affiliate data.
         </p>
@@ -56,8 +56,8 @@ function Products() {
                 <button
                   key={g}
                   onClick={() => setGoals(on ? goals.filter((x) => x !== g) : [...goals, g])}
-                  className={`rounded-full border px-3 py-1.5 text-sm transition-colors ${
-                    on ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"
+                  className={`rounded border px-3 py-1.5 text-sm transition-colors ${
+                    on ? "border-accent bg-accent-wash text-accent" : "text-ink-soft hover:bg-surface-sunken"
                   }`}
                 >
                   {g}
@@ -72,7 +72,7 @@ function Products() {
               <select
                 value={domain}
                 onChange={(e) => setDomain(e.target.value as "hair" | "skin")}
-                className="rounded-xl border bg-background px-3 py-2"
+                className="rounded border bg-surface px-3 py-2"
               >
                 <option value="hair">Hair &amp; scalp</option>
                 <option value="skin">Skin</option>
@@ -84,7 +84,7 @@ function Products() {
                 value={budget}
                 onChange={(e) => setBudget(e.target.value)}
                 placeholder="e.g. under $30"
-                className="rounded-xl border bg-background px-3 py-2"
+                className="rounded border bg-surface px-3 py-2"
               />
             </label>
             <Button onClick={run} disabled={busy}>
@@ -97,18 +97,18 @@ function Products() {
       {result && (
         <>
           {!!result.ingredient_conflicts?.length && (
-            <Card className="border-[hsl(var(--caution))]/40">
+            <Card className="border-caution/40">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-[hsl(var(--caution))]">
+                <CardTitle className="flex items-center gap-2 text-caution">
                   <AlertTriangle className="h-4 w-4" /> Ingredient conflicts in your regimen
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2 text-sm">
                   {result.ingredient_conflicts.map((c: any, i: number) => (
-                    <li key={i} className="rounded-xl border p-3">
+                    <li key={i} className="rounded border p-3">
                       <p className="font-medium">{c.between.join(" + ")}</p>
-                      <p className="text-muted-foreground">{c.note}</p>
+                      <p className="text-ink-soft">{c.note}</p>
                     </li>
                   ))}
                 </ul>
@@ -123,24 +123,24 @@ function Products() {
             <CardContent>
               <ul className="space-y-3">
                 {result.evidence_backed_suggestions.map((s: any, i: number) => (
-                  <li key={i} className="rounded-xl border p-4">
+                  <li key={i} className="rounded border p-4">
                     <div className="mb-1.5 flex flex-wrap items-center gap-2">
-                      <Badge variant="secondary">{s.source}</Badge>
-                      {s.evidence_grade && <Badge variant="outline">{s.evidence_grade.replace(/_/g, " ")}</Badge>}
+                      <Badge variant="neutral">{s.source}</Badge>
+                      {s.evidence_grade && <Badge variant="neutral">{s.evidence_grade.replace(/_/g, " ")}</Badge>}
                     </div>
                     <p className="font-medium">{s.suggestion}</p>
                     <a
                       href={s.url}
                       target="_blank"
                       rel="noreferrer"
-                      className="mt-1 inline-block text-xs text-muted-foreground underline-offset-2 hover:underline"
+                      className="mt-1 inline-block text-xs text-ink-soft underline-offset-2 hover:underline"
                     >
                       Based on: {s.based_on}
                     </a>
                   </li>
                 ))}
               </ul>
-              <p className="mt-4 text-xs text-muted-foreground">
+              <p className="mt-4 text-xs text-ink-soft">
                 Ranking basis: {result.ranking_basis}. {result.disclaimer}
               </p>
             </CardContent>
