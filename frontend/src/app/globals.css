@@ -1,0 +1,75 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 40% 99%;
+    --foreground: 222 34% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 34% 12%;
+    --primary: 172 62% 34%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 34% 20%;
+    --muted: 210 34% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 172 55% 94%;
+    --accent-foreground: 172 62% 24%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --caution: 38 92% 50%;
+    --border: 214 28% 91%;
+    --input: 214 28% 91%;
+    --ring: 172 62% 34%;
+    --radius: 1rem;
+  }
+
+  .dark {
+    --background: 222 40% 7%;
+    --foreground: 210 30% 96%;
+    --card: 222 34% 10%;
+    --card-foreground: 210 30% 96%;
+    --primary: 172 60% 45%;
+    --primary-foreground: 222 40% 7%;
+    --secondary: 217 30% 16%;
+    --secondary-foreground: 210 30% 96%;
+    --muted: 217 30% 15%;
+    --muted-foreground: 215 18% 62%;
+    --accent: 172 40% 18%;
+    --accent-foreground: 172 60% 78%;
+    --destructive: 0 62% 52%;
+    --destructive-foreground: 0 0% 100%;
+    --caution: 38 92% 55%;
+    --border: 217 28% 20%;
+    --input: 217 28% 20%;
+    --ring: 172 60% 45%;
+  }
+
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv11", "ss01";
+  }
+}
+
+@layer utilities {
+  /* Subtle premium surface used across metric cards. */
+  .surface {
+    @apply rounded-[var(--radius)] border bg-card shadow-[0_1px_2px_rgba(16,24,40,.04),0_1px_3px_rgba(16,24,40,.06)];
+  }
+  .metric-number {
+    @apply text-3xl font-semibold tracking-tight tabular-nums;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

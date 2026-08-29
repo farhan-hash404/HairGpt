@@ -1,0 +1,39 @@
+# --- Secrets & local config (NEVER commit) ---
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# --- User data / medical images (NEVER commit) ---
+backend/storage/
+backend/*.db
+backend/*.db-journal
+backend/*.sqlite3
+models/
+backend/models/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# --- Node / Next.js ---
+node_modules/
+.next/
+out/
+.vercel/
+*.tsbuildinfo
+next-env.d.ts
+
+# --- Editors / OS ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+!.vscode/extensions.json
