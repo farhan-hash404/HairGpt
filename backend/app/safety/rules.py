@@ -149,6 +149,108 @@ def rule_systemic_symptoms(obs, ctx) -> RuleResult:
     )
 
 
+# ---------------------------------------------------------------------------
+# History-driven rules. Photos cannot show thyroid disease, iron deficiency or a
+# drug side effect, yet these are among the most common and most TREATABLE
+# causes of hair loss. Missing them is the costliest failure this app can make:
+# the user spends months on cosmetic routines while a reversible cause goes
+# undiagnosed. These escalate to a clinician rather than diagnosing anything.
+# ---------------------------------------------------------------------------
+
+def rule_possible_systemic_cause(obs, ctx) -> RuleResult:
+    matched = any(
+        ctx.get(k)
+        for k in ("thyroid_condition", "iron_deficiency", "autoimmune_condition", "pcos")
+    )
+    return RuleResult(
+        "history_possible_systemic_cause",
+        "medium",
+        matched,
+        "A reported medical condition can itself cause hair loss and is often treatable; "
+        "a clinician should assess whether it is contributing.",
+    )
+
+
+def rule_possible_telogen_effluvium(obs, ctx) -> RuleResult:
+    """Sudden diffuse shedding 2-4 months after a physiological trigger.
+
+    This pattern is usually self-limiting, but it is managed completely
+    differently from patterned hair loss — so cosmetic 'regrowth' advice is the
+    wrong answer and a clinician should confirm the cause.
+    """
+    trigger = any(
+        ctx.get(k)
+        for k in ("recent_illness", "recent_surgery", "major_stress", "rapid_weight_loss", "postpartum")
+    )
+    diffuse_or_sudden = ctx.get("pattern") == "diffuse" or ctx.get("onset") == "sudden"
+    matched = bool(trigger and diffuse_or_sudden)
+    return RuleResult(
+        "history_possible_telogen_effluvium",
+        "medium",
+        matched,
+        "Sudden or diffuse shedding after illness, surgery, major stress, weight loss or childbirth "
+        "may reflect a temporary shedding phase, which is managed differently from patterned hair loss.",
+    )
+
+
+def rule_medication_associated_shedding(obs, ctx) -> RuleResult:
+    matched = bool(ctx.get("medication_associated_shedding"))
+    return RuleResult(
+        "history_medication_associated_shedding",
+        "medium",
+        matched,
+        "A reported medication is associated with hair shedding. Never stop a prescribed medication "
+        "on the basis of an app — discuss it with the prescriber.",
+    )
+
+
+def rule_traction_risk(obs, ctx) -> RuleResult:
+    matched = bool(ctx.get("tight_hairstyles")) and ctx.get("pattern") in ("receding", "patchy")
+    return RuleResult(
+        "history_traction_risk",
+        "medium",
+        matched,
+        "Tight hairstyles with recession or patchy loss may indicate traction-related damage, "
+        "which can become permanent if it continues.",
+    )
+
+
+def rule_endocrine_signals(obs, ctx) -> RuleResult:
+    matched = bool(ctx.get("menstrual_irregularity")) and bool(ctx.get("body_hair_change"))
+    return RuleResult(
+        "history_endocrine_signals",
+        "medium",
+        matched,
+        "Reported menstrual irregularity together with body-hair change warrants clinical assessment.",
+    )
+
+
+def rule_painful_or_itchy_scalp(obs, ctx) -> RuleResult:
+    """Scarring alopecias often present with symptoms before visible signs.
+
+    HIGH severity: scarring loss is permanent, and the window to prevent it is
+    exactly when a photo still looks unremarkable.
+    """
+    matched = bool(ctx.get("scalp_pain")) and bool(ctx.get("scalp_condition"))
+    return RuleResult(
+        "history_symptomatic_scalp",
+        "high",
+        matched,
+        "A painful scalp alongside a reported scalp condition can precede scarring hair loss, "
+        "which is permanent once established. This needs in-person evaluation.",
+    )
+
+
+HISTORY_RULES: list[Callable] = [
+    rule_possible_systemic_cause,
+    rule_possible_telogen_effluvium,
+    rule_medication_associated_shedding,
+    rule_traction_risk,
+    rule_endocrine_signals,
+    rule_painful_or_itchy_scalp,
+]
+
+
 SKIN_RULES: list[Callable] = [
     rule_suspicious_lesion,
     rule_rapidly_changing_lesion,
@@ -170,4 +272,8 @@ COMMON_RULES: list[Callable] = [
 
 def run_rules(domain: str, obs: list[Observation], ctx: dict) -> list[RuleResult]:
     rules = (HAIR_RULES if domain == "hair" else SKIN_RULES) + COMMON_RULES
+    # History applies to hair, where systemic and drug-related causes are common
+    # and invisible to a camera.
+    if domain == "hair":
+        rules = rules + HISTORY_RULES
     return [r(obs, ctx) for r in rules]

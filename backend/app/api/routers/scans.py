@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import uuid
+from datetime import date, timedelta
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, Response, UploadFile, status
 from sqlalchemy import select
@@ -35,7 +36,17 @@ from app.schemas.scan import (
     ScanCreateOut,
     ScanSummaryOut,
 )
+from app.api.routers.history import build_history_context
+from app.models.history import ClinicalHistory, SheddingLog
+from app.schemas.history import flag_medications
 from app.schemas.symptoms import AnalyzeIn
+from app.services.framing import (
+    FRAMING_GUIDANCE,
+    FRAMING_WARN_THRESHOLD,
+    compute_framing_match,
+    find_reference_session,
+    reference_views,
+)
 from app.services.orchestrator import run_analysis
 from app.services.storage import make_storage_key, storage
 
@@ -75,6 +86,30 @@ def create_scan(body: ScanCreateIn, user: User = Depends(require_analysis_consen
     return ScanCreateOut(
         session_id=s.id, domain=s.domain, required_views=_required_views(s.domain), status=s.status
     )
+
+
+@router.get("/reference")
+def get_capture_reference(
+    domain: str = "hair",
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """The scan a new capture should be framed against.
+
+    Returns the most recent completed scan of this domain plus the views that
+    passed quality in it. The capture UI overlays these as a translucent guide so
+    photos taken weeks apart stay comparable. Returns `null` for a first scan.
+    """
+    reference = find_reference_session(db, user.id, domain)
+    if reference is None:
+        return {"reference": None}
+    return {
+        "reference": {
+            "session_id": str(reference.id),
+            "created_at": reference.created_at.isoformat(),
+            "views": reference_views(db, reference),
+        }
+    }
 
 
 @router.post("/{session_id}/images/presign", response_model=PresignOut)
@@ -138,6 +173,18 @@ async def upload_image(
     q.method = report.confidence.method
     q.is_mock = report.is_mock
 
+    # Longitudinal framing: compare against the previous completed scan so repeat
+    # captures stay comparable. A mismatch WARNS but never blocks — refusing a
+    # scan is worse than accepting a flagged one, and the score gates comparison
+    # confidence downstream instead.
+    reference = find_reference_session(db, user.id, s.domain, exclude_session_id=s.id)
+    framing = compute_framing_match(db, reference, view, data)
+    retake_guidance = list(report.retake_guidance)
+    if framing is not None and framing < FRAMING_WARN_THRESHOLD:
+        retake_guidance.append(FRAMING_GUIDANCE)
+    q.framing_match = framing
+    q.retake_guidance = retake_guidance
+
     s.status = "quality_review"
     db.commit()
     db.refresh(image)
@@ -157,7 +204,8 @@ async def upload_image(
         angle_ok=report.angle_ok,
         scalp_visibility=report.scalp_visibility,
         reasons=report.reasons,
-        retake_guidance=report.retake_guidance,
+        retake_guidance=retake_guidance,
+        framing_match=framing,
         confidence=ConfidenceOut(value=report.confidence.value, basis=report.confidence.basis, method=report.confidence.method),
         is_mock=report.is_mock,
     )
@@ -215,7 +263,12 @@ def analyze(
         )
     s.status = "analyzing"
     db.commit()
-    safety_ctx = (body or AnalyzeIn()).to_safety_context()
+
+    # Safety context = stored clinical history + this scan's symptom report.
+    # History first so an explicit symptom answer wins on any overlapping key.
+    safety_ctx = build_history_context(db, user.id)
+    safety_ctx.update((body or AnalyzeIn()).to_safety_context())
+
     run_analysis(db, s, safety_ctx)  # synchronous in MVP; a worker in production
     return {"status": "complete", "session_id": str(s.id)}
 
@@ -315,6 +368,71 @@ def doctor_report(session_id: uuid.UUID, user: User = Depends(get_current_user),
         payload["view"] = view_by_image.get(model_row.image_id)
         observations.append(payload)
 
+    # Self-reported history is often the most clinically useful part of this
+    # report — it is the context no photo can supply, and unlike the CV output
+    # its value does not depend on model quality.
+    history_row = db.scalar(select(ClinicalHistory).where(ClinicalHistory.user_id == user.id))
+    history_payload = None
+    if history_row:
+        history_payload = {
+            "onset": history_row.onset,
+            "duration_months": history_row.duration_months,
+            "pattern": history_row.pattern,
+            "family_history_hair_loss": history_row.family_history_hair_loss,
+            "family_history_side": history_row.family_history_side,
+            "conditions": [
+                name
+                for name, present in {
+                    "thyroid condition": history_row.thyroid_condition,
+                    "iron deficiency": history_row.iron_deficiency,
+                    "autoimmune condition": history_row.autoimmune_condition,
+                    "PCOS": history_row.pcos,
+                    "scalp condition": history_row.scalp_condition,
+                }.items()
+                if present
+            ],
+            "possible_triggers": [
+                name
+                for name, present in {
+                    "recent illness": history_row.recent_illness,
+                    "recent surgery": history_row.recent_surgery,
+                    "major stress": history_row.major_stress,
+                    "rapid weight loss": history_row.rapid_weight_loss,
+                    "postpartum": history_row.postpartum,
+                }.items()
+                if present
+            ],
+            "trigger_months_ago": history_row.trigger_months_ago,
+            "medications": history_row.medications or [],
+            "medications_associated_with_shedding": flag_medications(history_row.medications or []),
+            "styling": [
+                name
+                for name, present in {
+                    "tight hairstyles": history_row.tight_hairstyles,
+                    "chemical treatments": history_row.chemical_treatments,
+                    "heat styling": history_row.heat_styling,
+                }.items()
+                if present
+            ],
+            "symptoms": [
+                name
+                for name, present in {
+                    "scalp itch": history_row.scalp_itch,
+                    "scalp pain": history_row.scalp_pain,
+                    "body hair change": history_row.body_hair_change,
+                    "menstrual irregularity": history_row.menstrual_irregularity,
+                }.items()
+                if present
+            ],
+            "notes": history_row.notes,
+        }
+
+    shedding_entries = db.scalars(
+        select(SheddingLog)
+        .where(SheddingLog.user_id == user.id, SheddingLog.date >= date.today() - timedelta(days=90))
+        .order_by(SheddingLog.date.asc())
+    ).all()
+
     return {
         "report_type": "clinician_draft",
         "generated_for_clinician_review": True,
@@ -323,6 +441,17 @@ def doctor_report(session_id: uuid.UUID, user: User = Depends(get_current_user),
         "domain": s.domain,
         "captured_at": s.created_at.isoformat(),
         "overall_confidence": analysis.overall_confidence,
+        "clinical_history": history_payload,
+        "shedding_log_90d": [
+            {
+                "date": e.date.isoformat(),
+                "count": e.count,
+                "bucket": e.bucket,
+                "context": e.context,
+                "washed_hair": e.washed_hair,
+            }
+            for e in shedding_entries
+        ],
         "observations": observations,
         "safety_verdict": analysis.safety_verdict.model_dump() if analysis.safety_verdict else None,
         "recommendations": [r.model_dump() for r in analysis.recommendations],

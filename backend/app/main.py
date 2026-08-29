@@ -12,6 +12,7 @@ from app.api.routers import (
     analyses,
     auth,
     comparisons,
+    history,
     products,
     scans,
     timeline,
@@ -78,5 +79,5 @@ def health():
 
 
 API = "/api/v1"
-for r in (auth, scans, treatments, timeline, comparisons, products, analyses, account):
+for r in (auth, scans, treatments, timeline, comparisons, products, analyses, account, history):
     app.include_router(r.router, prefix=API)

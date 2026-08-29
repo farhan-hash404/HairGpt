@@ -8,64 +8,14 @@ These are the invariants that must never regress:
 """
 from __future__ import annotations
 
-import os
-import tempfile
-from io import BytesIO
-
 import pytest
-from fastapi.testclient import TestClient
 
+from app.cv.imageio import HAS_PIXELS
+from tests.conftest import authenticate as _auth
+from tests.conftest import grant_consent as _grant_consent
+from tests.conftest import make_jpeg as _jpeg
 
-@pytest.fixture
-def client(monkeypatch):
-    tmpdir = tempfile.mkdtemp()
-    monkeypatch.setenv("DATABASE_URL", f"sqlite:///{tmpdir}/test.db")
-    monkeypatch.setenv("STORAGE_LOCAL_DIR", f"{tmpdir}/storage")
-    monkeypatch.setenv("HAIRGPT_ENV", "dev")
-
-    # Re-import with the patched environment so settings/engine pick it up.
-    import importlib
-    import app.core.config as config
-
-    config.get_settings.cache_clear()
-    config.settings = config.Settings()
-    for mod in ("app.db.session", "app.services.storage", "app.main"):
-        importlib.reload(importlib.import_module(mod))
-    # The storage backend is resolved lazily; drop any cached one so it picks up
-    # this test's temp directory.
-    from app.services.storage import reset_storage
-
-    reset_storage()
-    from app.main import app as fresh_app
-
-    with TestClient(fresh_app) as c:
-        yield c
-
-
-def _jpeg(size: int = 1024) -> bytes:
-    """A sufficiently large, sharp, well-exposed image so the quality gate passes."""
-    try:
-        from PIL import Image, ImageDraw
-    except ImportError:
-        pytest.skip("Pillow required")
-    img = Image.new("RGB", (size, size), (200, 172, 152))
-    d = ImageDraw.Draw(img)
-    for i in range(0, size, 3):
-        d.line([(i, 0), (i + 12, size)], fill=(50, 44, 40), width=1)
-    buf = BytesIO()
-    img.save(buf, format="JPEG", quality=92)
-    return buf.getvalue()
-
-
-def _auth(client, email="t@example.com"):
-    client.post("/api/v1/auth/register", json={"email": email, "password": "password123"})
-    tok = client.post("/api/v1/auth/login", json={"email": email, "password": "password123"}).json()["access_token"]
-    return {"Authorization": f"Bearer {tok}"}
-
-
-def _grant_consent(client, headers):
-    for purpose in ("storage", "analysis"):
-        client.post("/api/v1/auth/consents", json={"purpose": purpose, "granted": True}, headers=headers)
+pytestmark = pytest.mark.skipif(not HAS_PIXELS, reason="numpy/Pillow not installed")
 
 
 def test_analysis_blocked_without_consent(client):

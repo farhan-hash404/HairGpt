@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, Camera, Check, RefreshCw, Upload } from "lucide-react";
-import { api, type QualityReport } from "@/lib/api";
+import { api, getToken, type CaptureReference, type QualityReport } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -47,6 +47,14 @@ export function GuidedCapture({ domain }: { domain: "hair" | "skin" }) {
   const [hairSymptoms, setHairSymptoms] = React.useState<HairSymptoms>(EMPTY_HAIR);
   const [skinSymptoms, setSkinSymptoms] = React.useState<SkinSymptoms>(EMPTY_SKIN);
 
+  // Ghost overlay: the previous scan's photo for this view, shown translucently
+  // so repeat captures are framed the same way. This is the single biggest lever
+  // on longitudinal comparability.
+  const [reference, setReference] = React.useState<CaptureReference>(null);
+  const [ghostUrl, setGhostUrl] = React.useState<string | null>(null);
+  const [ghostOn, setGhostOn] = React.useState(true);
+  const [ghostOpacity, setGhostOpacity] = React.useState(0.4);
+
   React.useEffect(() => {
     (async () => {
       try {
@@ -56,10 +64,44 @@ export function GuidedCapture({ domain }: { domain: "hair" | "skin" }) {
       } catch (e: any) {
         setError(e?.message ?? "Could not start a scan");
       }
+      try {
+        const { reference: ref } = await api.captureReference(domain);
+        setReference(ref);
+      } catch {
+        /* no reference scan yet — first-time capture, ghost simply unavailable */
+      }
     })();
     return () => stopCamera();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [domain]);
+
+  // Load the ghost image whenever the active view changes.
+  const currentView = views[current];
+  React.useEffect(() => {
+    setGhostUrl(null);
+    if (!reference || !currentView || !reference.views.includes(currentView)) return;
+    let objectUrl: string | null = null;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(
+          `/api/v1/scans/${reference.session_id}/images/${currentView}/content`,
+          { headers: { Authorization: `Bearer ${getToken()}` } }
+        );
+        if (!res.ok) return;
+        const blob = await res.blob();
+        if (cancelled) return;
+        objectUrl = URL.createObjectURL(blob);
+        setGhostUrl(objectUrl);
+      } catch {
+        /* ghost is a convenience; failing to load it must not block capture */
+      }
+    })();
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [reference, currentView]);
 
   async function startCamera() {
     try {
@@ -175,10 +217,29 @@ export function GuidedCapture({ domain }: { domain: "hair" | "skin" }) {
       <Card className="overflow-hidden">
         <div className="relative aspect-square w-full bg-black/90 sm:aspect-[4/3]">
           <video ref={videoRef} autoPlay playsInline muted className="h-full w-full object-cover" />
+
+          {/* Ghost of the previous scan's same view — match this and the two
+              photos stay comparable. */}
+          {ghostOn && ghostUrl && (
+            <img
+              src={ghostUrl}
+              alt=""
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 h-full w-full object-cover mix-blend-luminosity"
+              style={{ opacity: ghostOpacity }}
+            />
+          )}
+
           {/* Silhouette guide */}
           <div className="pointer-events-none absolute inset-0 grid place-items-center">
             <div className="h-[70%] w-[55%] rounded-[45%] border-2 border-dashed border-white/60" />
           </div>
+
+          {ghostUrl && (
+            <div className="absolute left-3 top-3 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-medium text-white">
+              Ghost: last scan
+            </div>
+          )}
           <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-4">
             <p className="text-sm font-medium text-white">{titleize(view ?? "")}</p>
             <p className="text-xs text-white/80">{VIEW_COACHING[view] ?? "Center the region in the guide."}</p>
@@ -216,6 +277,38 @@ export function GuidedCapture({ domain }: { domain: "hair" | "skin" }) {
             </Button>
           )}
         </CardContent>
+
+        {ghostUrl && (
+          <div className="flex flex-wrap items-center gap-3 border-t bg-muted/40 px-5 py-3 text-sm">
+            <label className="flex cursor-pointer items-center gap-2">
+              <input
+                type="checkbox"
+                checked={ghostOn}
+                onChange={(e) => setGhostOn(e.target.checked)}
+                className="h-4 w-4 accent-[hsl(var(--primary))]"
+              />
+              <span className="font-medium">Show last scan as a guide</span>
+            </label>
+            {ghostOn && (
+              <label className="flex items-center gap-2">
+                <span className="text-muted-foreground">Opacity</span>
+                <input
+                  type="range"
+                  min={0.1}
+                  max={0.8}
+                  step={0.05}
+                  value={ghostOpacity}
+                  onChange={(e) => setGhostOpacity(Number(e.target.value))}
+                  className="w-32 accent-[hsl(var(--primary))]"
+                  aria-label="Ghost overlay opacity"
+                />
+              </label>
+            )}
+            <span className="text-xs text-muted-foreground">
+              Matching the ghost keeps your scans comparable over time.
+            </span>
+          </div>
+        )}
       </Card>
 
       {/* Quality feedback — the gate that blocks analysis */}
@@ -266,7 +359,18 @@ function QualityPanel({ report }: { report: QualityReport }) {
           <Stat label="Distance" ok={report.distance_ok} />
           <Stat label="Angle" ok={report.angle_ok} />
           {report.scalp_visibility !== null && <Stat label="Scalp visible" value={report.scalp_visibility} />}
+          {/* Framing is a warning, never a blocker — see the note below. */}
+          {report.framing_match !== null && (
+            <Stat label="Matches last scan" value={report.framing_match} threshold={0.6} />
+          )}
         </dl>
+
+        {report.framing_match !== null && report.framing_match < 0.6 && (
+          <p className="mt-3 rounded-xl border border-[hsl(var(--caution))]/40 bg-[hsl(var(--caution))]/10 p-3 text-sm">
+            Framed differently from your last scan. This won&apos;t stop the analysis, but it will lower the confidence
+            of any before/after comparison.
+          </p>
+        )}
 
         {!!report.retake_guidance.length && (
           <div className="mt-4 rounded-xl bg-muted/60 p-3">
@@ -283,8 +387,21 @@ function QualityPanel({ report }: { report: QualityReport }) {
   );
 }
 
-function Stat({ label, value, ok, invert }: { label: string; value?: number; ok?: boolean; invert?: boolean }) {
-  const good = ok !== undefined ? ok : invert ? (value ?? 0) < 0.12 : (value ?? 0) > 0.35;
+function Stat({
+  label,
+  value,
+  ok,
+  invert,
+  threshold,
+}: {
+  label: string;
+  value?: number;
+  ok?: boolean;
+  invert?: boolean;
+  threshold?: number;
+}) {
+  const good =
+    ok !== undefined ? ok : invert ? (value ?? 0) < 0.12 : (value ?? 0) > (threshold ?? 0.35);
   return (
     <div>
       <dt className="text-xs text-muted-foreground">{label}</dt>

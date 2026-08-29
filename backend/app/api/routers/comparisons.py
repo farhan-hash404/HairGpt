@@ -74,6 +74,17 @@ def create_comparison(body: ComparisonIn, user: User = Depends(get_current_user)
     img_b, img_a = _matched_images(db, body.session_before, body.session_after)
     if not (img_b and img_a):
         limitations.append("No view passed quality in both scans, so images could not be aligned.")
+
+    # If the "after" capture was recorded as framed differently from its
+    # reference, say so here — this is exactly the situation where an apparent
+    # change is most likely to be an artifact of framing.
+    framing = img_a.quality.framing_match if (img_a and img_a.quality) else None
+    if framing is not None and framing < 0.6:
+        limitations.append(
+            f"The later photo was framed differently from the earlier one "
+            f"(framing match {framing:.0%}); apparent differences may be pose, not change."
+        )
+
     if img_b and img_a:
         try:
             ab = get_aligner().align(ImageInput(data=storage.get(img_b.storage_key), view=img_b.view), img_b.view, None)
@@ -90,7 +101,10 @@ def create_comparison(body: ComparisonIn, user: User = Depends(get_current_user)
         if b is None or a is None or b.value_num is None or a.value_num is None:
             continue
         delta = round(a.value_num - b.value_num, 3)
-        conf = round(min(b.confidence, a.confidence) * (0.5 + 0.5 * align_q), 3)
+        # Confidence in a delta is capped by BOTH how well the images aligned and
+        # how consistently the later scan was framed.
+        framing_factor = 0.6 + 0.4 * framing if framing is not None else 1.0
+        conf = round(min(b.confidence, a.confidence) * (0.5 + 0.5 * align_q) * framing_factor, 3)
         metrics.append({
             "kind": kind,
             "before": b.value_num,

@@ -59,6 +59,9 @@ class QualityOut(BaseModel):
     scalp_visibility: float | None
     reasons: list[str]
     retake_guidance: list[str]
+    # How closely this capture matches the previous scan's framing for this view.
+    # None when there is no reference scan (a first scan) — never treat as failure.
+    framing_match: float | None = None
     confidence: ConfidenceOut
     is_mock: bool
 

@@ -18,6 +18,73 @@ export default function ReportPage() {
   );
 }
 
+/** Self-reported history — usually the most clinically actionable part of this
+ *  report, and the part whose value does not depend on model quality. */
+function HistorySection({ history }: { history: any }) {
+  const rows: [string, React.ReactNode][] = [];
+
+  if (history.onset || history.pattern || history.duration_months) {
+    rows.push([
+      "Presentation",
+      [
+        history.onset && `${titleize(history.onset)} onset`,
+        history.pattern && `${titleize(history.pattern)} pattern`,
+        history.duration_months && `${history.duration_months} months`,
+      ]
+        .filter(Boolean)
+        .join(" · "),
+    ]);
+  }
+  if (history.family_history_hair_loss) {
+    rows.push([
+      "Family history",
+      `Positive${history.family_history_side ? ` (${history.family_history_side})` : ""}`,
+    ]);
+  }
+  if (history.conditions?.length) rows.push(["Conditions", history.conditions.join(", ")]);
+  if (history.possible_triggers?.length) {
+    rows.push([
+      "Possible triggers",
+      `${history.possible_triggers.join(", ")}${
+        history.trigger_months_ago ? ` — ~${history.trigger_months_ago} months ago` : ""
+      }`,
+    ]);
+  }
+  if (history.medications?.length) rows.push(["Medications", history.medications.join(", ")]);
+  if (history.medications_associated_with_shedding?.length) {
+    rows.push([
+      "Shedding-associated",
+      <span key="flag" className="text-[hsl(var(--caution))]">
+        {history.medications_associated_with_shedding.join(", ")} — association only, not causation
+      </span>,
+    ]);
+  }
+  if (history.styling?.length) rows.push(["Hair care", history.styling.join(", ")]);
+  if (history.symptoms?.length) rows.push(["Symptoms", history.symptoms.join(", ")]);
+  if (history.notes) rows.push(["Patient notes", history.notes]);
+
+  if (!rows.length) return null;
+
+  return (
+    <section>
+      <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+        Self-reported history
+      </h2>
+      <p className="mb-2 text-xs text-muted-foreground">
+        Reported by the patient in-app. Not verified and not a diagnosis.
+      </p>
+      <dl className="grid gap-2 text-sm">
+        {rows.map(([label, value]) => (
+          <div key={label} className="grid grid-cols-[9rem_1fr] gap-3 border-b pb-2">
+            <dt className="text-muted-foreground">{label}</dt>
+            <dd>{value}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
+}
+
 function Report() {
   const { id } = useParams<{ id: string }>();
   const [r, setR] = React.useState<any>(null);
@@ -56,6 +123,29 @@ function Report() {
           </p>
         </CardHeader>
         <CardContent className="space-y-5">
+          {r.clinical_history && <HistorySection history={r.clinical_history} />}
+
+          {!!r.shedding_log_90d?.length && (
+            <section>
+              <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                Self-reported shedding (90 days)
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {r.shedding_log_90d.length} entries logged. Counts are patient estimates and vary with washing.
+              </p>
+              <ul className="mt-2 grid gap-1 text-sm sm:grid-cols-2">
+                {r.shedding_log_90d.slice(-8).map((s: any, i: number) => (
+                  <li key={i} className="flex justify-between rounded-lg border px-3 py-1.5">
+                    <span>{new Date(s.date).toLocaleDateString()}</span>
+                    <span className="text-muted-foreground">
+                      {titleize(s.context)} · {s.count !== null ? `${s.count} hairs` : titleize(s.bucket ?? "—")}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
           <section>
             <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
               Image-based observations

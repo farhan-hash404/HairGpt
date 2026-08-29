@@ -1,29 +1,102 @@
 "use client";
 
+import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Activity,
   Camera,
+  ClipboardList,
   FlaskConical,
   LineChart,
+  MoreHorizontal,
   Pill,
   ScanFace,
   Settings,
   Sparkles,
+  Waves,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+// Primary nav stays short enough to never wrap; everything else lives behind
+// "More" so adding a feature doesn't degrade the header.
 const NAV = [
   { href: "/", label: "Home", icon: Activity },
   { href: "/scan/hair", label: "Hair scan", icon: Camera },
-  { href: "/skin", label: "SkinGPT", icon: ScanFace },
+  { href: "/shedding", label: "Shedding", icon: Waves },
   { href: "/timeline", label: "Timeline", icon: LineChart },
   { href: "/compare", label: "Compare", icon: Sparkles },
+];
+
+const MORE_NAV = [
+  { href: "/history", label: "Your history", icon: ClipboardList },
   { href: "/treatments", label: "Treatments", icon: Pill },
+  { href: "/skin", label: "SkinGPT", icon: ScanFace },
   { href: "/products", label: "Products", icon: FlaskConical },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
+
+function MoreMenu({ pathname }: { pathname: string }) {
+  const [open, setOpen] = React.useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+  const active = MORE_NAV.some((item) => pathname.startsWith(item.href));
+
+  // Close on outside click and on Escape, so the menu never traps focus.
+  React.useEffect(() => {
+    if (!open) return;
+    function onPointerDown(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        className={cn(
+          "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm transition-colors",
+          active ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-muted"
+        )}
+      >
+        <MoreHorizontal className="h-3.5 w-3.5" />
+        More
+      </button>
+      {open && (
+        <div
+          role="menu"
+          className="absolute right-0 top-full z-50 mt-2 w-52 overflow-hidden rounded-xl border bg-card p-1 shadow-lg"
+        >
+          {MORE_NAV.map(({ href, label, icon: Icon }) => (
+            <Link
+              key={href}
+              href={href}
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className={cn(
+                "flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors",
+                pathname.startsWith(href) ? "bg-accent text-accent-foreground" : "hover:bg-muted"
+              )}
+            >
+              <Icon className="h-4 w-4" />
+              {label}
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -56,6 +129,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </Link>
               );
             })}
+            <MoreMenu pathname={pathname} />
           </nav>
         </div>
       </header>

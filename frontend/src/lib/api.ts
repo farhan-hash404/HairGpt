@@ -14,9 +14,17 @@ export type QualityReport = {
   scalp_visibility: number | null;
   reasons: string[];
   retake_guidance: string[];
+  /** Framing similarity to the previous scan's same view. null = no reference. */
+  framing_match: number | null;
   confidence: Confidence;
   is_mock: boolean;
 };
+
+export type CaptureReference = {
+  session_id: string;
+  created_at: string;
+  views: string[];
+} | null;
 
 export type Observation = {
   kind: string;
@@ -153,6 +161,8 @@ export const api = {
     request("/auth/consents", { method: "POST", body: JSON.stringify({ purpose, granted }) }),
 
   // Scans
+  captureReference: (domain: "hair" | "skin") =>
+    request<{ reference: CaptureReference }>(`/scans/reference?domain=${domain}`),
   createScan: (domain: "hair" | "skin") =>
     request<{ session_id: string; domain: string; required_views: string[]; status: string }>("/scans", {
       method: "POST",
@@ -189,4 +199,92 @@ export const api = {
   // Products
   recommendProducts: (body: any) => request<any>("/products/recommend", { method: "POST", body: JSON.stringify(body) }),
   listProducts: () => request<any[]>("/products"),
+
+  // Clinical history
+  getHistory: () => request<ClinicalHistory | null>("/history"),
+  saveHistory: (body: Partial<ClinicalHistory>) =>
+    request<ClinicalHistory>("/history", { method: "PUT", body: JSON.stringify(body) }),
+
+  // Shedding
+  listShedding: (days = 90) => request<SheddingEntry[]>(`/shedding?days=${days}`),
+  logShedding: (body: Partial<SheddingEntry>) =>
+    request<SheddingEntry>("/shedding", { method: "POST", body: JSON.stringify(body) }),
+  sheddingTrend: (windowDays = 60) => request<SheddingTrend>(`/shedding/trend?window_days=${windowDays}`),
+};
+
+export type ClinicalHistory = {
+  id?: string;
+  onset: string | null;
+  duration_months: number | null;
+  pattern: string | null;
+  family_history_hair_loss: boolean;
+  family_history_side: string | null;
+  thyroid_condition: boolean;
+  iron_deficiency: boolean;
+  autoimmune_condition: boolean;
+  pcos: boolean;
+  scalp_condition: boolean;
+  recent_illness: boolean;
+  recent_surgery: boolean;
+  major_stress: boolean;
+  rapid_weight_loss: boolean;
+  postpartum: boolean;
+  trigger_months_ago: number | null;
+  medications: string[];
+  tight_hairstyles: boolean;
+  chemical_treatments: boolean;
+  heat_styling: boolean;
+  scalp_itch: boolean;
+  scalp_pain: boolean;
+  body_hair_change: boolean;
+  menstrual_irregularity: boolean;
+  notes: string | null;
+  flagged_medications?: string[];
+};
+
+export type SheddingEntry = {
+  id?: string;
+  date?: string;
+  count: number | null;
+  bucket: string | null;
+  context: string;
+  washed_hair: boolean;
+  note: string | null;
+};
+
+export type SheddingTrend = {
+  window_days: number;
+  entries: number;
+  average_by_context: Record<string, number>;
+  trend: "increasing" | "stable" | "decreasing" | "insufficient_data";
+  trend_note: string;
+  disclaimer: string;
+};
+
+export const EMPTY_HISTORY: ClinicalHistory = {
+  onset: null,
+  duration_months: null,
+  pattern: null,
+  family_history_hair_loss: false,
+  family_history_side: null,
+  thyroid_condition: false,
+  iron_deficiency: false,
+  autoimmune_condition: false,
+  pcos: false,
+  scalp_condition: false,
+  recent_illness: false,
+  recent_surgery: false,
+  major_stress: false,
+  rapid_weight_loss: false,
+  postpartum: false,
+  trigger_months_ago: null,
+  medications: [],
+  tight_hairstyles: false,
+  chemical_treatments: false,
+  heat_styling: false,
+  scalp_itch: false,
+  scalp_pain: false,
+  body_hair_change: false,
+  menstrual_irregularity: false,
+  notes: null,
 };
