@@ -138,6 +138,7 @@ def run_analysis(db: Session, session: ScanSession, safety_ctx: dict | None = No
                     model_name=o.model_name,
                     model_version=o.model_version,
                     is_mock=o.is_mock,
+                    validated=o.validated,
                     observation_type=o.observation_type,
                 )
             )

@@ -56,6 +56,10 @@ _DISCLAIMERS = [
     "HairGPT provides image-based observations, not a medical diagnosis.",
 ]
 _MOCK_DISCLAIMER = "Some results were produced by mock inference and are NOT medically validated."
+_UNVALIDATED_DISCLAIMER = (
+    "Some results came from a trained model that has NOT passed fairness and "
+    "calibration evaluation. Treat them as provisional."
+)
 
 
 def _required_views(domain: str) -> list[str]:
@@ -281,9 +285,13 @@ def _assemble_analysis(db: Session, s: ScanSession) -> AnalysisOut:
     recs = db.scalars(select(Recommendation).where(Recommendation.analysis_id == analysis.id)).all()
     sv = analysis.safety_verdict
 
+    # Warn on ANY unvalidated model, whether it is a mock heuristic or a real
+    # model that has not cleared the stratified evaluation.
     disclaimers = list(_DISCLAIMERS)
     if any(o.is_mock for o in obs):
         disclaimers.append(_MOCK_DISCLAIMER)
+    elif any(not o.validated for o in obs):
+        disclaimers.append(_UNVALIDATED_DISCLAIMER)
 
     # Resolve evidence refs on recommendations from the analysis explanation store.
     ev_index = {e["id"]: e for e in (analysis.explanation or {}).get("evidence", [])} if analysis.explanation else {}

@@ -36,8 +36,20 @@ export type Observation = {
   model_name: string;
   model_version: string;
   is_mock: boolean;
+  /** False for mock heuristics AND for real models that have not passed the
+   *  stratified fairness evaluation. Warn on either. */
+  validated: boolean;
   observation_type: "visual_observation" | "ai_inference";
 };
+
+/** How an observation's trustworthiness should be labelled. */
+export function modelTrustLabel(o: Pick<Observation, "is_mock" | "validated">):
+  | { variant: "mock"; text: string }
+  | null {
+  if (o.is_mock) return { variant: "mock", text: "mock · not validated" };
+  if (!o.validated) return { variant: "mock", text: "unvalidated model" };
+  return null;
+}
 
 export type EvidenceRef = {
   id: string;

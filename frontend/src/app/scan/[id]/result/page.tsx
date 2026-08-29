@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { FileText, Stethoscope } from "lucide-react";
-import { api, type Analysis, type Observation } from "@/lib/api";
+import { api, modelTrustLabel, type Analysis, type Observation } from "@/lib/api";
 import { AuthGate } from "@/components/auth-gate";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,7 @@ type ObservationGroup = {
   confidence: number;
   basis: string;
   isMock: boolean;
+  validated: boolean;
   observationType: Observation["observation_type"];
 };
 
@@ -76,6 +77,8 @@ function groupObservations(observations: Observation[]): ObservationGroup[] {
       confidence: Math.min(...list.map((o) => o.confidence)),
       basis: list[0].confidence_basis,
       isMock: list.some((o) => o.is_mock),
+      // Validated only if EVERY contributing view came from a validated model.
+      validated: list.every((o) => o.validated),
       observationType: list[0].observation_type,
     };
   });
@@ -153,7 +156,10 @@ function Result() {
                     <Badge variant={g.observationType === "visual_observation" ? "secondary" : "outline"}>
                       {g.observationType === "visual_observation" ? "visual observation" : "AI inference"}
                     </Badge>
-                    {g.isMock && <Badge variant="mock">mock · not validated</Badge>}
+                    {(() => {
+                      const trust = modelTrustLabel({ is_mock: g.isMock, validated: g.validated });
+                      return trust ? <Badge variant={trust.variant}>{trust.text}</Badge> : null;
+                    })()}
                   </div>
                   <p className="mt-2 text-xs text-muted-foreground">{g.basis}</p>
                 </div>

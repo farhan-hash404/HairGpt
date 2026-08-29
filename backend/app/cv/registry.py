@@ -34,23 +34,28 @@ _MOCK = {
 
 
 def _real(capability: str):
-    """Load a real (torch) implementation. On ANY failure, fall back to mock and
-    log LOUDLY — we never silently present a fake result as validated."""
+    """Load a real (torch) implementation, falling back to mock when unavailable.
+
+    The torch backend logs its own specific reason (no manifest entry, missing
+    checkpoint, torch not installed), so returning None here is an expected
+    outcome rather than an error — we do not re-log a vaguer version of it.
+    Unexpected exceptions ARE logged loudly: we never silently substitute a
+    heuristic for a model the operator believes is running.
+    """
     try:
         from app.cv import torch as torch_backend  # noqa: local import; optional
 
         impl = torch_backend.get(capability, settings.cv_model_dir)
-        if impl is None:
-            raise RuntimeError(f"torch backend has no '{capability}' implementation")
-        log.info("CV[%s]: using REAL torch backend", capability)
-        return impl
+        if impl is not None:
+            log.info("CV[%s]: using REAL torch backend", capability)
+            return impl
     except Exception as exc:  # pragma: no cover - depends on optional stack
         log.warning(
-            "CV[%s]: torch backend unavailable (%s) -> FALLING BACK TO MOCK (not validated)",
+            "CV[%s]: torch backend raised (%s) -> FALLING BACK TO MOCK (not validated)",
             capability,
             exc,
         )
-        return _MOCK[capability]()
+    return _MOCK[capability]()
 
 
 def _get(capability: str):

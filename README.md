@@ -26,6 +26,10 @@ Two subsystems on one pipeline: **HairGPT** (hair & scalp, 7 guided views) and *
 | Structured observations with confidence + provenance + `is_mock` | ✅ |
 | Deterministic safety engine that overrides the LLM | ✅ |
 | Pre-analysis symptom check feeding the safety engine | ✅ |
+| Ghost-overlay capture + framing consistency score | ✅ |
+| Clinical history intake + history-driven safety rules | ✅ |
+| Shedding log with per-context trend analysis | ✅ |
+| Model validation gate + stratified fairness harness | ✅ |
 | Medical RAG (source allowlist, pgvector + portable fallback) | ✅ |
 | Evidence-gated recommendation engine, structurally prescription-free | ✅ |
 | LLM explanation layer (provider interface, output scrubber) | ✅ |
@@ -36,9 +40,10 @@ Two subsystems on one pipeline: **HairGPT** (hair & scalp, 7 guided views) and *
 | Encrypted storage, export, hard delete, audit log | ✅ |
 | SkinGPT (3-view capture, Skin Appearance Index, routines) | ✅ MVP |
 | Product intelligence (OCR + ingredient conflicts) | ⚠️ partial — see Known limitations |
-| Real trained CV models | ❌ interfaces ready, no checkpoints |
+| Real CV backend (`CV_BACKEND=torch`) | ✅ runs; **no checkpoints ship** |
+| Trained model weights | ❌ none — see Known limitations |
 
-**30 backend tests** cover the clinical invariants. `npm run build` is clean with **0 npm vulnerabilities**.
+**88 backend tests** cover the clinical invariants. `npm run build` is clean with **0 npm vulnerabilities**.
 
 ---
 
@@ -153,26 +158,59 @@ Roll back one revision:
 python -m alembic downgrade -1
 ```
 
-Two migrations ship:
-1. `fecd21625f17` — full initial schema (18 tables).
+Migrations that ship:
+1. `fecd21625f17` — initial schema (18 tables).
 2. `0002_pgvector` — **PostgreSQL only** (a no-op on SQLite): enables `vector` + `pgcrypto`, converts `evidence_chunks.embedding` to native `vector(768)`, and creates an HNSW cosine index.
+3. `c107b3d3bd8d` — `framing_match` on image quality reports.
+4. `314714c7d089` — clinical history and shedding log tables.
+5. `5153637a15a3` — `validated` flag on observations (backfilled `false`, the safe default).
 
 After running `0002_pgvector` on a fresh Postgres database, re-run the corpus ingest so embeddings land in the native column.
+
+> Migrations own the schema. `scripts/seed_demo.py` deliberately does **not** create tables — it exits with instructions if you run it before migrating, so the dev database can't drift out of sync with Alembic.
 
 ---
 
 ## Model installation
 
-The MVP ships **no trained checkpoints** and needs none.
+The repository ships **no trained checkpoints** and runs fine without any.
 
 **Enabling a real CV backend:**
 
-1. Install the ML stack: `pip install torch transformers opencv-python-headless`
-2. Place checkpoints in `CV_MODEL_DIR`.
-3. Implement the capability classes in [`backend/app/cv/torch/`](backend/app/cv/torch/) against the ABCs in [`app/cv/base.py`](backend/app/cv/base.py), and return them from `get(capability, model_dir)`.
-4. Set `CV_BACKEND=torch`.
+1. `pip install torch numpy Pillow`
+2. Copy [`backend/models/manifest.example.json`](backend/models/manifest.example.json) to `models/manifest.json` and point each entry at your checkpoint (TorchScript preferred — it carries its own architecture).
+3. Set `CV_BACKEND=torch`.
 
-The registry ([`app/cv/registry.py`](backend/app/cv/registry.py)) falls back to mock and **logs loudly** if a checkpoint fails to load — it never silently passes a mock off as real. A model may only set `is_mock=False` after passing the stratified evaluation in [`docs/08-roadmap.md`](docs/08-roadmap.md).
+Two guarantees govern this path:
+
+- **Fallback is loud, never silent.** If torch is missing, a checkpoint is absent, or a manifest entry is malformed, the registry falls back to mock and logs the specific reason. It never passes a heuristic off as a trained model.
+- **`is_mock` and `validated` are separate flags.** A real model that has not passed evaluation runs as `is_mock=false, validated=false` — its confidence is capped, the UI badges it *"unvalidated model"*, and the response carries a disclaimer. Only a passing evaluation record produces `validated=true`.
+
+### The validation gate
+
+`validated` is **re-derived from the recorded metrics every time the manifest loads**, so hand-editing `"passed": true` cannot promote a failing model — there is a test asserting exactly that. A model must clear all of:
+
+| Gate | Threshold |
+|---|---|
+| Worst-subgroup score | ≥ 0.70 |
+| Worst-to-best subgroup gap | ≤ 0.15 |
+| Calibration error (ECE) | ≤ 0.10 |
+| Smallest subgroup sample count | ≥ 30 |
+| Subgroup axes reported | all six, mandatory |
+
+Run it:
+
+```bash
+python -m scripts.evaluate_model --results results.json --model hair-scalp-seg
+```
+
+Exit code is 0 on pass, 1 on fail, so it drops straight into CI. To see the failure it exists to catch — a model with a healthy 0.790 aggregate that scores 0.621 on Fitzpatrick V–VI, and is refused:
+
+```bash
+python -m scripts.evaluate_model --demo-biased
+```
+
+A [model card](docs/model-cards/TEMPLATE.md) is required before validation.
 
 **Real embeddings:** `pip install sentence-transformers`, then `EMBEDDING_PROVIDER=sentence_transformer`.
 **Real OCR:** `pip install pytesseract` plus a system Tesseract install.
@@ -231,7 +269,7 @@ cd frontend && npm run build
 ## Known limitations
 
 **Clinical**
-1. **All CV output is mock and non-validated.** The heuristics (variance-of-Laplacian sharpness, luminance clustering, texture proxies) are not trained models and have no measured accuracy on any population. `is_mock: true` everywhere.
+1. **All CV output is mock and non-validated.** The heuristics (variance-of-Laplacian sharpness, luminance clustering, texture proxies) are not trained models and have no measured accuracy on any population. `is_mock: true` everywhere. The torch backend and validation gate are real and tested, but **no trained weights ship** — the gate is machinery waiting for a model, not evidence that one exists.
 2. **Hair/scalp "segmentation" is luminance thresholding**, not semantic segmentation. It will behave very differently across hair colors and skin tones — light hair on light scalp is close to a worst case. **No fairness evaluation has been run.**
 3. **"Density" is not follicular density.** It is a texture proxy, labeled `apparent`. No pixel-to-millimeter calibration exists, so no true measurement is possible.
 4. **Distance checking is really resolution adequacy.** True distance needs a landmark model; a high-resolution photo taken from far away will pass. Documented in `imageio.py`.
@@ -240,7 +278,9 @@ cd frontend && npm run build
 
 **Technical**
 7. **Analysis is synchronous** — a 7-view scan blocks the request. Production needs the worker pool the architecture anticipates.
-8. **Alignment is centroid + spread normalization**, not feature-based registration. Alignment quality is honestly reported (~60% on the demo data) and gates comparison confidence.
+8. **Alignment is centroid + spread normalization**, not feature-based registration. Alignment quality is honestly reported (~60% on the demo data) and gates comparison confidence. The ghost-overlay framing score is a *composition* proxy (8×8 luminance layout correlation) — it catches shifts and zooms, but is not true pose estimation and cannot detect head rotation about the vertical axis.
+15. **The shedding log is self-reported and unverifiable.** Counts depend on hair length, wash frequency and how carefully someone counts. Trends are computed per context and suppressed when the change is within the data's own variability, but they remain indicative only.
+16. **History-driven safety rules depend on accurate self-report.** They meaningfully widen the safety net — they are the only way the app currently sees thyroid disease, iron deficiency or drug-associated shedding — but someone who doesn't know or doesn't disclose a condition will not be escalated.
 9. **Presigned uploads are stubbed** in local mode; the client posts through the API. S3 mode needs real presigned URL generation.
 10. **The XOR dev fallback in `storage.py` is not encryption.** Install `cryptography` so Fernet is used, and set `IMAGE_ENCRYPTION_KEY`.
 11. **Product OCR needs Tesseract.** Without it, `/products/scan` honestly returns `confidence: 0` and asks for manual entry rather than inventing ingredients. Barcode lookup and the ingredient database are not implemented.

@@ -76,6 +76,9 @@ class ObservationOut(BaseModel):
     model_name: str
     model_version: str
     is_mock: bool
+    # False for both mock heuristics and real-but-unevaluated models; the UI
+    # must warn on either.
+    validated: bool = False
     observation_type: str
 
     model_config = {"from_attributes": True}

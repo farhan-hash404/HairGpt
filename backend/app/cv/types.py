@@ -29,7 +29,19 @@ class Observation:
     """A single structured CV output. Never a diagnosis.
 
     We NEVER fabricate a numeric measurement without a confidence and a basis.
-    `is_mock=True` marks output from non-validated mock inference.
+
+    `is_mock` and `validated` are DELIBERATELY SEPARATE, because they answer
+    different questions and conflating them is how an unvalidated model quietly
+    starts looking trustworthy:
+
+      is_mock=True,  validated=False -> a heuristic stand-in (ships by default)
+      is_mock=False, validated=False -> a real trained model that has NOT passed
+                                        the stratified fairness evaluation
+      is_mock=False, validated=True  -> a real model that has passed it
+
+    Only the third may be presented without a "not validated" warning. There is
+    no combination in which `validated=True` is set by anything other than a
+    passing evaluation record.
     """
 
     kind: str
@@ -40,6 +52,7 @@ class Observation:
     model_name: str = ""
     model_version: str = ""
     is_mock: bool = True
+    validated: bool = False
     observation_type: ObservationType = "visual_observation"
 
 
