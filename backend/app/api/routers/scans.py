@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import client_ip_hash, get_current_user, require_analysis_consent
 from app.core.audit import record_audit
+from app.core.config import settings
 from app.cv.registry import get_quality_gate
 from app.cv.types import ImageInput
 from app.db.session import get_db
@@ -75,6 +76,18 @@ def _get_session(db: Session, user: User, session_id: uuid.UUID) -> ScanSession:
 
 @router.post("", response_model=ScanCreateOut, status_code=201)
 def create_scan(body: ScanCreateIn, user: User = Depends(require_analysis_consent), db: Session = Depends(get_db)):
+    # The skin domain is implemented end to end but not exposed: the product
+    # ships one domain deliberately. Re-enable with ENABLE_SKIN_DOMAIN=true.
+    if body.domain == "skin" and not settings.enable_skin_domain:
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN,
+            detail={
+                "code": "domain_not_enabled",
+                "domain": "skin",
+                "message": "Skin analysis is not enabled in this deployment.",
+            },
+        )
+
     protocol = body.capture_protocol or ("hair_v1" if body.domain == "hair" else "skin_v1")
     s = ScanSession(
         user_id=user.id,

@@ -18,6 +18,26 @@ from tests.conftest import make_jpeg as _jpeg
 pytestmark = pytest.mark.skipif(not HAS_PIXELS, reason="numpy/Pillow not installed")
 
 
+def test_skin_domain_is_not_exposed(client):
+    """The product ships one domain on purpose.
+
+    The skin path is implemented end to end behind the domain-parameterized
+    pipeline, but exposing a shallow second product costs more credibility than
+    it adds. The gate is a config flag, not a deletion.
+    """
+    headers = _auth(client, "skin@example.com")
+    _grant_consent(client, headers)
+    r = client.post("/api/v1/scans", json={"domain": "skin"}, headers=headers)
+    assert r.status_code == 403
+    assert r.json()["detail"]["code"] == "domain_not_enabled"
+
+
+def test_hair_domain_is_unaffected(client):
+    headers = _auth(client, "hairok@example.com")
+    _grant_consent(client, headers)
+    assert client.post("/api/v1/scans", json={"domain": "hair"}, headers=headers).status_code == 201
+
+
 def test_analysis_blocked_without_consent(client):
     h = _auth(client, "noconsent@example.com")
     r = client.post("/api/v1/scans", json={"domain": "hair"}, headers=h)

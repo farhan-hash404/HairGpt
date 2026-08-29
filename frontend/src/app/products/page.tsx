@@ -21,7 +21,8 @@ export default function ProductsPage() {
 function Products() {
   const [goals, setGoals] = React.useState<string[]>([]);
   const [budget, setBudget] = React.useState("");
-  const [domain, setDomain] = React.useState<"hair" | "skin">("hair");
+  // The product ships one domain; evidence retrieval is still domain-scoped.
+  const domain = "hair";
   const [result, setResult] = React.useState<any>(null);
   const [busy, setBusy] = React.useState(false);
 
@@ -67,17 +68,6 @@ function Products() {
           </div>
 
           <div className="flex flex-wrap items-end gap-3">
-            <label className="text-sm">
-              <span className="mb-1 block font-medium">Domain</span>
-              <select
-                value={domain}
-                onChange={(e) => setDomain(e.target.value as "hair" | "skin")}
-                className="rounded border bg-surface px-3 py-2"
-              >
-                <option value="hair">Hair &amp; scalp</option>
-                <option value="skin">Skin</option>
-              </select>
-            </label>
             <label className="text-sm">
               <span className="mb-1 block font-medium">Budget (optional)</span>
               <input

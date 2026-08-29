@@ -33,7 +33,7 @@ const mono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "HairGPT",
   description:
-    "Image-based hair, scalp and skin observations with stated confidence, cited evidence, and clinician escalation. Not a medical diagnosis.",
+    "Image-based hair and scalp observations with stated confidence, cited evidence, and clinician escalation. Not a medical diagnosis.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

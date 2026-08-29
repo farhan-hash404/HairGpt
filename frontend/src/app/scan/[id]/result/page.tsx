@@ -127,7 +127,7 @@ function Result() {
             <CardTitle>Skin Appearance Index</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="metric-number">{data.skin_appearance_index}</p>
+            <p className="readout-lg">{data.skin_appearance_index}</p>
             <p className="mt-1 text-sm text-ink-soft">
               A transparent composite of apparent attributes (0–100). Not a clinical score.
             </p>

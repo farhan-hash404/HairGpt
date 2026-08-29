@@ -19,7 +19,6 @@ const NAV = [
 const MORE_NAV = [
   { href: "/history", label: "Your history" },
   { href: "/treatments", label: "Treatments" },
-  { href: "/skin", label: "SkinGPT" },
   { href: "/products", label: "Products" },
   { href: "/settings", label: "Settings & privacy" },
 ];

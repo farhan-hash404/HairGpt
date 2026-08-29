@@ -1,12 +1,14 @@
 # HairGPT
 
-**Multimodal hair/scalp and skin analysis platform.** Not a chatbot — a clinically cautious tracking and explanation system built around one loop:
+**Hair and scalp analysis platform.** Not a chatbot — a clinically cautious tracking and explanation system built around one loop:
 
 ```
 Analyze → Explain → Track → Recommend → Escalate
 ```
 
-Two subsystems on one pipeline: **HairGPT** (hair & scalp, 7 guided views) and **SkinGPT** (face & skin, 3 guided views).
+Seven guided views, an image-quality gate that refuses to analyse what it can't read, and a deterministic safety layer that can overrule the language model.
+
+The pipeline is domain-parameterized and a second domain (skin) is implemented behind it, but the product ships **one domain deliberately** — see [*One domain, on purpose*](#one-domain-on-purpose).
 
 > ### ⚠️ Clinical position — read this first
 > HairGPT produces **image-based observations and AI inferences**. It is **not a medical device**, does **not diagnose**, and **never prescribes medication**.
@@ -38,12 +40,12 @@ Two subsystems on one pipeline: **HairGPT** (hair & scalp, 7 guided views) and *
 | Before/after comparison — aligned overlay + difference map | ✅ |
 | "Why?" / "Evidence" / Doctor report | ✅ |
 | Encrypted storage, export, hard delete, audit log | ✅ |
-| SkinGPT (3-view capture, Skin Appearance Index, routines) | ✅ MVP |
+| SkinGPT (3-view capture, Skin Appearance Index, routines) | 🔒 built, **not exposed** — see below |
 | Product intelligence (OCR + ingredient conflicts) | ⚠️ partial — see Known limitations |
 | Real CV backend (`CV_BACKEND=torch`) | ✅ runs; **no checkpoints ship** |
 | Trained model weights | ❌ none — see Known limitations |
 
-**88 backend tests** cover the clinical invariants. `npm run build` is clean with **0 npm vulnerabilities**.
+**90 backend tests** cover the clinical invariants. `npm run build` is clean with **0 npm vulnerabilities**.
 
 ---
 
@@ -133,6 +135,7 @@ Open <http://localhost:3000> and sign in with **demo@example.com** / **demopassw
 | `LLM_MODEL` | `claude-sonnet-5` | Model id when `LLM_PROVIDER=anthropic`. |
 | `ANTHROPIC_API_KEY` | — | Required only for the `anthropic` provider. |
 | `SAFETY_STRICT` | `true` | Fail-safe to a more cautious verdict on internal errors. |
+| `ENABLE_SKIN_DOMAIN` | `false` | Exposes the skin domain. Off by design — see *One domain, on purpose*. |
 
 Frontend: `NEXT_PUBLIC_API_BASE` (default `http://localhost:8000`) — the dev server proxies `/api/v1/*` to it.
 
@@ -263,6 +266,32 @@ Frontend:
 ```bash
 cd frontend && npm run build
 ```
+
+---
+
+## One domain, on purpose
+
+The pipeline, the CV interfaces, the safety engine and the RAG corpus are all
+**domain-parameterized**, and the skin path is implemented end to end behind them:
+`FaceAnalyzer` and its mock, four skin red-flag rules, a 3-view capture protocol,
+the Skin Appearance Index, and skin evidence in the corpus. All of it is covered
+by tests.
+
+It is nonetheless **not exposed**. A shallow second product costs more credibility
+than it adds surface area, and this project's argument is depth: one domain taken
+all the way from guided capture through to a clinician handoff.
+
+The cut is a config flag, not a deletion:
+
+```bash
+ENABLE_SKIN_DOMAIN=true
+```
+
+`POST /scans` with `domain: "skin"` returns `403 domain_not_enabled` while the flag
+is off. The abstraction stays in the codebase deliberately — it is what demonstrates
+the pipeline generalizes, rather than the generalization being speculative. Re-exposing
+it needs the flag plus the two frontend routes (`/skin`, `/scan/skin`) restored from
+git history.
 
 ---
 

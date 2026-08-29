@@ -50,6 +50,12 @@ class Settings(BaseSettings):
     # Safety
     safety_strict: bool = True
 
+    # Domains. The pipeline, CV interfaces and safety engine are all
+    # domain-parameterized, and the skin path is fully implemented behind them —
+    # but the product deliberately ships ONE domain. A shallow second product
+    # costs more credibility than it adds surface area. Flip this to expose it.
+    enable_skin_domain: bool = False
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
