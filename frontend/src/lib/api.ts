@@ -98,18 +98,36 @@ export type Analysis = {
 
 const TOKEN_KEY = "hairgpt.access";
 const REFRESH_KEY = "hairgpt.refresh";
+let memoryToken: string | null = null;
+let memoryRefresh: string | null = null;
 
-export function getToken() {
+export function getToken(): string | null {
   if (typeof window === "undefined") return null;
-  return localStorage.getItem(TOKEN_KEY);
+  try {
+    return localStorage.getItem(TOKEN_KEY) ?? memoryToken;
+  } catch {
+    return memoryToken;
+  }
 }
+
 export function setTokens(access: string, refresh: string) {
-  localStorage.setItem(TOKEN_KEY, access);
-  localStorage.setItem(REFRESH_KEY, refresh);
+  memoryToken = access;
+  memoryRefresh = refresh;
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(TOKEN_KEY, access);
+    localStorage.setItem(REFRESH_KEY, refresh);
+  } catch {}
 }
+
 export function clearTokens() {
-  localStorage.removeItem(TOKEN_KEY);
-  localStorage.removeItem(REFRESH_KEY);
+  memoryToken = null;
+  memoryRefresh = null;
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(REFRESH_KEY);
+  } catch {}
 }
 
 /** Turn FastAPI's error shapes into something a person can act on. */
@@ -148,12 +166,23 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   if (token) headers.set("Authorization", `Bearer ${token}`);
   if (!(init.body instanceof FormData) && init.body) headers.set("Content-Type", "application/json");
 
-  const res = await fetch(`/api/v1${path}`, { ...init, headers });
-  if (res.status === 204) return undefined as T;
-  const text = await res.text();
-  const data = text ? JSON.parse(text) : null;
-  if (!res.ok) throw new ApiError(res.status, data?.detail ?? data);
-  return data as T;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+  try {
+    const res = await fetch(`/api/v1${path}`, {
+      ...init,
+      headers,
+      signal: init.signal || controller.signal,
+    });
+    if (res.status === 204) return undefined as T;
+    const text = await res.text();
+    const data = text ? JSON.parse(text) : null;
+    if (!res.ok) throw new ApiError(res.status, data?.detail ?? data);
+    return data as T;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 export const api = {

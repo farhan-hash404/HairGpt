@@ -60,11 +60,16 @@ function groupObservations(observations: Observation[]): ObservationGroup[] {
     const unit = list.find((o) => o.unit)?.unit ?? "";
     const label = list.find((o) => o.value_label)?.value_label ?? null;
 
-    const display = label
-      ? label
-      : mean !== null
-        ? `${mean.toFixed(3)}${unit ? ` ${unit}` : ""}`
-        : "—";
+    let display = "—";
+    if (label) {
+      display = label;
+    } else if (mean !== null) {
+      if (kind.includes("visibility") || kind.includes("density") || (!unit && mean >= 0 && mean <= 1)) {
+        display = `${(mean * 100).toFixed(1)}%`;
+      } else {
+        display = `${mean.toFixed(2)}${unit ? ` ${unit}` : ""}`;
+      }
+    }
 
     return {
       kind,

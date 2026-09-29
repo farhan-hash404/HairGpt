@@ -39,7 +39,16 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     refresh();
   }, [refresh]);
 
-  if (state === "loading") return <p className="text-ink-soft">Loading…</p>;
+  if (state === "loading") {
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center">
+        <div className="flex items-center gap-3 text-ink-soft">
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+          <p className="text-sm font-medium">Connecting to your account…</p>
+        </div>
+      </div>
+    );
+  }
   if (state === "anon") return <AuthForm onDone={refresh} />;
   if (state === "consent") return <ConsentForm consents={consents} onDone={refresh} />;
   return <>{children}</>;
@@ -61,20 +70,39 @@ function AuthForm({ onDone }: { onDone: () => void }) {
       await api.login(email, password);
       onDone();
     } catch (err: any) {
-      setError(err?.message ?? "Something went wrong");
+      const msg =
+        err?.message ||
+        (typeof err?.detail === "string" ? err.detail : null) ||
+        (mode === "login"
+          ? "Invalid email or password. Please try again."
+          : "Could not create account. Email may already be registered.");
+      setError(msg);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function loginAsDemo() {
+    setBusy(true);
+    setError(null);
+    try {
+      await api.login("demo@example.com", "demopassword123");
+      onDone();
+    } catch (err: any) {
+      setError(err?.message ?? "Could not sign in with demo credentials");
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <div className="mx-auto max-w-md py-10">
-      <Card>
+    <div className="mx-auto max-w-md py-6 sm:py-10 animate-rise">
+      <Card className="rounded-2xl border border-rule shadow-xs">
         <CardHeader>
-          <div className="mb-1 grid h-10 w-10 place-items-center rounded bg-accent">
-            <Lock className="h-4 w-4 text-accent-foreground" />
+          <div className="mb-2 grid h-10 w-10 place-items-center rounded-xl bg-accent-wash text-accent">
+            <Lock className="h-5 w-5" />
           </div>
-          <CardTitle>{mode === "login" ? "Sign in to HairGPT" : "Create your account"}</CardTitle>
+          <CardTitle className="text-xl font-bold">{mode === "login" ? "Sign in to HairGPT" : "Create your account"}</CardTitle>
           <p className="text-sm text-ink-soft">
             Your photos are encrypted, never sold, and never used for facial recognition.
           </p>
@@ -88,7 +116,8 @@ function AuthForm({ onDone }: { onDone: () => void }) {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded border bg-surface px-3 py-2"
+                placeholder="name@example.com"
+                className="w-full rounded-xl border border-rule bg-surface px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
               />
             </label>
             <label className="block text-sm">
@@ -99,17 +128,39 @@ function AuthForm({ onDone }: { onDone: () => void }) {
                 minLength={8}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded border bg-surface px-3 py-2"
+                className="w-full rounded-xl border border-rule bg-surface px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
               />
             </label>
-            {error && <p className="text-sm text-alert">{error}</p>}
-            <Button type="submit" disabled={busy} className="w-full">
-              {busy ? "Please wait…" : mode === "login" ? "Sign in" : "Create account"}
+            {error && <p className="text-sm font-medium text-alert">{error}</p>}
+            <Button type="submit" disabled={busy} className="w-full rounded-xl bg-accent py-2.5 text-white hover:bg-accent/90">
+              {busy ? "Signing in…" : mode === "login" ? "Sign in" : "Create account"}
+            </Button>
+
+            <div className="relative my-3 flex items-center justify-center">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-rule" />
+              </div>
+              <span className="relative bg-surface px-2 text-xs uppercase tracking-wider text-ink-faint">
+                Quick Access
+              </span>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              disabled={busy}
+              onClick={loginAsDemo}
+              className="w-full rounded-xl bg-accent-wash text-accent font-semibold border border-accent-edge hover:bg-accent hover:text-white transition-all"
+            >
+              ⚡ One-Tap Sign In as Demo User
             </Button>
           </form>
           <button
-            onClick={() => setMode(mode === "login" ? "register" : "login")}
-            className="mt-4 w-full text-sm text-ink-soft hover:text-ink"
+            onClick={() => {
+              setError(null);
+              setMode(mode === "login" ? "register" : "login");
+            }}
+            className="mt-4 w-full text-center text-xs text-ink-soft hover:text-ink"
           >
             {mode === "login" ? "New here? Create an account" : "Already have an account? Sign in"}
           </button>

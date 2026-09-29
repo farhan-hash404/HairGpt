@@ -3,38 +3,54 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronDown } from "lucide-react";
+import {
+  ChevronDown,
+  Sparkles,
+  LayoutDashboard,
+  ClipboardCheck,
+  Activity,
+  Calendar,
+  Layers,
+  Plus,
+  Settings,
+  Pill,
+  ShoppingBag,
+  History,
+  ShieldCheck,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
-/* Primary nav stays short enough never to wrap; the rest sits behind "More",
-   so adding a feature doesn't degrade the header. */
 const NAV = [
-  { href: "/", label: "Overview" },
-  { href: "/assessment", label: "Assessment" },
-  { href: "/shedding", label: "Shedding" },
-  { href: "/timeline", label: "Timeline" },
-  { href: "/compare", label: "Compare" },
+  { href: "/", label: "Overview", icon: LayoutDashboard },
+  { href: "/assessment", label: "Assessment", icon: ClipboardCheck },
+  { href: "/shedding", label: "Shedding", icon: Activity },
+  { href: "/timeline", label: "Timeline", icon: Calendar },
+  { href: "/compare", label: "Compare", icon: Layers },
 ];
 
 const MORE_NAV = [
-  { href: "/history", label: "Your history" },
-  { href: "/treatments", label: "Treatments" },
-  { href: "/products", label: "Products" },
-  { href: "/settings", label: "Settings & privacy" },
+  { href: "/history", label: "Your History", icon: History },
+  { href: "/treatments", label: "Treatments & Regimen", icon: Pill },
+  { href: "/products", label: "Products & Ingredients", icon: ShoppingBag },
+  { href: "/settings", label: "Settings & Privacy", icon: Settings },
 ];
 
 function isActive(pathname: string, href: string) {
   return href === "/" ? pathname === "/" : pathname.startsWith(href);
 }
 
-/** The wordmark doubles as the product's thesis: a measured reading, not a verdict. */
 function Wordmark() {
   return (
-    <Link href="/" className="group flex items-baseline gap-2" aria-label="HairGPT home">
-      <span className="font-display text-xl font-semibold tracking-tight">HairGPT</span>
-      <span className="hidden select-none text-2xs uppercase tracking-[0.14em] text-ink-faint sm:inline">
-        observation, not diagnosis
-      </span>
+    <Link href="/" className="group flex items-center gap-2.5" aria-label="HairGPT home">
+      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-accent to-blue-400 text-white shadow-sm shadow-accent/25 transition-transform group-hover:scale-105">
+        <Sparkles className="h-5 w-5" />
+      </div>
+      <div>
+        <span className="text-lg font-bold tracking-tight text-ink">HairGPT</span>
+        <span className="hidden select-none text-[10px] font-semibold tracking-wider text-ink-faint sm:block uppercase">
+          Clinical Tracking & AI Insights
+        </span>
+      </div>
     </Link>
   );
 }
@@ -65,31 +81,34 @@ function MoreMenu({ pathname }: { pathname: string }) {
         aria-expanded={open}
         aria-haspopup="menu"
         className={cn(
-          "flex items-center gap-1 rounded px-2.5 py-1.5 text-sm transition-colors",
-          active ? "text-ink" : "text-ink-soft hover:text-ink"
+          "flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all",
+          active
+            ? "bg-accent-wash text-accent font-semibold"
+            : "text-ink-soft hover:bg-surface-sunken hover:text-ink"
         )}
       >
         More
-        <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", open && "rotate-180")} />
+        <ChevronDown className={cn("h-4 w-4 transition-transform duration-200", open && "rotate-180")} />
       </button>
       {open && (
         <div
           role="menu"
-          className="panel absolute right-0 top-full z-50 mt-1.5 w-56 overflow-hidden p-1 shadow-lg"
+          className="panel absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-xl p-1.5 shadow-xl backdrop-blur-md animate-rise"
         >
-          {MORE_NAV.map(({ href, label }) => (
+          {MORE_NAV.map(({ href, label, icon: Icon }) => (
             <Link
               key={href}
               href={href}
               role="menuitem"
               onClick={() => setOpen(false)}
               className={cn(
-                "block rounded px-2.5 py-2 text-sm transition-colors",
+                "flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                 pathname.startsWith(href)
                   ? "bg-accent-wash text-accent"
                   : "text-ink-soft hover:bg-surface-sunken hover:text-ink"
               )}
             >
+              <Icon className="h-4 w-4 text-ink-faint" />
               {label}
             </Link>
           ))}
@@ -103,12 +122,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-40 border-b bg-ground/85 backdrop-blur-md">
-        <div className="container flex h-14 items-center justify-between gap-6">
+    <div className="flex min-h-screen flex-col bg-ground">
+      {/* Top Navbar */}
+      <header className="sticky top-0 z-40 border-b bg-surface/90 backdrop-blur-md">
+        <div className="container flex h-16 items-center justify-between gap-4">
           <Wordmark />
 
-          <nav className="hidden items-center gap-0.5 md:flex" aria-label="Primary">
+          {/* Desktop Navigation */}
+          <nav className="hidden items-center gap-1 md:flex" aria-label="Primary">
             {NAV.map(({ href, label }) => {
               const active = isActive(pathname, href);
               return (
@@ -117,57 +138,73 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   href={href}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "relative rounded px-2.5 py-1.5 text-sm transition-colors",
-                    active ? "text-ink" : "text-ink-soft hover:text-ink"
+                    "relative rounded-lg px-3.5 py-2 text-sm font-medium transition-all",
+                    active
+                      ? "bg-accent-wash text-accent font-semibold shadow-xs"
+                      : "text-ink-soft hover:bg-surface-sunken hover:text-ink"
                   )}
                 >
                   {label}
-                  {/* The active marker is a rule, matching the calibration
-                      language used throughout the product. */}
-                  {active && (
-                    <span className="absolute inset-x-2.5 -bottom-[13px] h-px bg-accent" aria-hidden="true" />
-                  )}
                 </Link>
               );
             })}
             <MoreMenu pathname={pathname} />
           </nav>
+
+          {/* Header Action */}
+          <div className="hidden items-center gap-3 sm:flex">
+            <Link
+              href="/assessment"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-sm font-medium text-white shadow-sm shadow-accent/30 hover:bg-accent/90 transition-all active:scale-95"
+            >
+              <Plus className="h-4 w-4" />
+              <span>New Check</span>
+            </Link>
+          </div>
         </div>
       </header>
 
-      <main className="container flex-1 py-10">{children}</main>
+      {/* Main Content Area */}
+      <main className="container flex-1 py-8 md:py-10 pb-24 md:pb-12">{children}</main>
 
-      {/* Mobile nav */}
+      {/* Mobile Bottom Navigation Bar */}
       <nav
-        className="sticky bottom-0 z-40 grid grid-cols-5 border-t bg-ground/95 backdrop-blur md:hidden"
+        className="fixed bottom-0 left-0 right-0 z-40 border-t bg-surface/95 backdrop-blur-lg md:hidden"
         aria-label="Primary mobile"
       >
-        {NAV.map(({ href, label }) => {
-          const active = isActive(pathname, href);
-          return (
-            <Link
-              key={href}
-              href={href}
-              aria-current={active ? "page" : undefined}
-              className={cn(
-                "border-t-2 py-2.5 text-center text-2xs font-medium",
-                active ? "border-accent text-ink" : "border-transparent text-ink-faint"
-              )}
-            >
-              {label}
-            </Link>
-          );
-        })}
+        <div className="grid grid-cols-5 py-1.5 px-2">
+          {NAV.map(({ href, label, icon: Icon }) => {
+            const active = isActive(pathname, href);
+            return (
+              <Link
+                key={href}
+                href={href}
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  "flex flex-col items-center justify-center gap-1 rounded-lg py-1.5 transition-colors",
+                  active ? "text-accent font-semibold" : "text-ink-faint hover:text-ink"
+                )}
+              >
+                <Icon className={cn("h-5 w-5", active && "text-accent stroke-[2.2]")} />
+                <span className="text-[11px]">{label}</span>
+              </Link>
+            );
+          })}
+        </div>
       </nav>
 
+      {/* Footer */}
       <footer className="border-t bg-surface-sunken">
-        <div className="container flex flex-col gap-2 py-6 text-xs text-ink-faint">
-          <p className="max-w-[68ch]">
+        <div className="container flex flex-col gap-3 py-6 text-xs text-ink-faint">
+          <div className="flex items-center gap-2 text-ink-soft font-medium">
+            <ShieldCheck className="h-4 w-4 text-accent" />
+            <span>Clinical Transparency & Privacy Safeguards</span>
+          </div>
+          <p className="max-w-[72ch] leading-relaxed">
             HairGPT produces image-based observations and AI inferences —{" "}
             <strong className="font-semibold text-ink-soft">not a medical diagnosis</strong>. It never prescribes
-            medication. The computer-vision models in this build are unvalidated heuristics.
+            medication. All computer-vision outputs are informational heuristics. Always consult a board-certified dermatologist for clinical diagnoses and treatment prescriptions.
           </p>
-          <p>Always consult a qualified clinician for diagnosis and treatment.</p>
         </div>
       </footer>
     </div>
