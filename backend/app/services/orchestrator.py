@@ -97,18 +97,14 @@ def run_analysis(db: Session, session: ScanSession, safety_ctx: dict | None = No
 
     verdict = safety_evaluate(session.domain, all_obs, ctx)
 
-    recs = build_recommendations(db, session.domain, all_obs, verdict, overall_conf)
+    recs = build_recommendations(db, session.domain, all_obs, verdict, overall_conf, signals=ctx)
 
     # Deduplicate evidence by document id — the same source is often cited by
     # several recommendations, but it should appear once in the evidence list.
     evidence_by_id: dict[str, dict] = {}
     for r in recs:
         for e in r.evidence:
-            evidence_by_id.setdefault(
-                e.id,
-                {"id": e.id, "source": e.source, "title": e.title, "url": e.url,
-                 "publisher": e.publisher, "evidence_grade": e.evidence_grade},
-            )
+            evidence_by_id.setdefault(e.id, e.to_public())
 
     # LLM explanation (phrasing only).
     exp_ctx = ExplanationContext(

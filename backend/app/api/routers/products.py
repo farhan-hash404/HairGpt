@@ -101,7 +101,8 @@ def recommend(body: ProductRecommendIn, user: User = Depends(get_current_user), 
             conflicts.append({"between": sorted((regimen_ings & group_a) | (regimen_ings & group_b)), "note": msg})
 
     query = " ".join([body.domain] + body.goals) or body.domain
-    evidence = retrieve(db, query, body.domain if body.domain in ("hair", "skin") else "skin")
+    domain = body.domain if body.domain in ("hair", "skin") else "hair"
+    evidence = retrieve(db, query, domain, supported_only=True)
 
     suggestions = []
     for e in evidence[:4]:
@@ -111,6 +112,10 @@ def recommend(body: ProductRecommendIn, user: User = Depends(get_current_user), 
             "evidence_grade": e.evidence_grade,
             "suggestion": _suggestion_from_evidence(e.text),
             "url": e.url,
+            # The passage itself, so every suggestion can be checked against its source.
+            "quote": e.text[:400],
+            "section": e.section,
+            "license": e.license,
         })
 
     return {

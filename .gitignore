@@ -10,8 +10,20 @@ backend/storage/
 backend/*.db
 backend/*.db-journal
 backend/*.sqlite3
-models/
-backend/models/
+
+# --- ML model weights (never commit) ---
+# Anchored on purpose. A bare "models/" also matched backend/app/models/ — the
+# SQLAlchemy source package — which silently kept it out of git.
+/models/
+/backend/models/*
+!/backend/models/manifest.example.json
+
+# --- Generated RAG / evaluation artefacts ---
+backend/data/corpus/raw/
+backend/data/chroma/
+backend/mlartifacts/
+backend/mlruns/
+backend/evaluation/test_images/
 
 # --- Python ---
 __pycache__/

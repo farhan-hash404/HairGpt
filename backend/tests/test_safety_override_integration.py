@@ -14,7 +14,7 @@ from app.cv.types import ConfidenceScore, Observation
 from app.db.base import Base
 from app.llm.base import ExplanationContext
 from app.llm.provider import MockLLMProvider
-from app.rag.ingest import seed_corpus
+from app.rag.ingest import ensure_evidence
 from app.recommendations.engine import build_recommendations
 from app.safety.engine import evaluate
 
@@ -24,13 +24,13 @@ def db():
     engine = create_engine("sqlite:///:memory:")
     Base.metadata.create_all(engine)
     s = sessionmaker(bind=engine)()
-    seed_corpus(s)
+    ensure_evidence(s)
     yield s
     s.close()
 
 
-def _obs(kind, num=None, conf=0.8):
-    return Observation(kind=kind, value_num=num, confidence=ConfidenceScore(conf, "t", "t"))
+def _obs(kind, num=None, conf=0.8, label=None):
+    return Observation(kind=kind, value_num=num, value_label=label, confidence=ConfidenceScore(conf, "t", "t"))
 
 
 def _pipeline(db, domain, observations, ctx):
@@ -79,7 +79,7 @@ def test_suspicious_lesion_red_flag_suppresses_routines(db):
 
 def test_no_red_flag_allows_evidence_backed_guidance(db):
     verdict, recs, _ = _pipeline(
-        db, "hair", [_obs("scalp_visibility", 0.35), _obs("apparent_density", 0.4)],
+        db, "hair", [_obs("scalp_visibility", 0.35), _obs("apparent_density", 0.4, label="apparent sparse")],
         {"overall_confidence": 0.8},
     )
     assert verdict.verdict == "ok"

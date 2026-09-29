@@ -1,0 +1,54 @@
+{"id": "q01", "query": "how many hairs a day is it normal to lose", "relevant": ["NHS:hair-loss", "MEDLINEPLUS:hair-loss"], "kind": "patient"}
+{"id": "q02", "query": "is male pattern baldness inherited", "relevant": ["MEDLINEPLUS:androgenetic-alopecia"], "kind": "lay"}
+{"id": "q03", "query": "what causes alopecia areata", "relevant": ["NIAMS:alopecia-areata", "MEDLINEPLUS:alopecia-areata", "EUROPEPMC:PMC12010142"], "kind": "patient"}
+{"id": "q04", "query": "treatment options for alopecia areata", "relevant": ["NIAMS:alopecia-areata-treatment", "EUROPEPMC:PMC12010142", "EUROPEPMC:PMC9470217", "EUROPEPMC:PMC8556406"], "kind": "patient"}
+{"id": "q05", "query": "JAK inhibitors for alopecia areata", "relevant": ["EUROPEPMC:PMC9470217"], "kind": "technical"}
+{"id": "q06", "query": "side effects of finasteride", "relevant": ["NHS:finasteride-side-effects"], "kind": "patient"}
+{"id": "q07", "query": "can finasteride affect fertility or pregnancy", "relevant": ["NHS:finasteride-pregnancy"], "kind": "patient"}
+{"id": "q08", "query": "who should not take finasteride", "relevant": ["NHS:finasteride-who-can-take"], "kind": "patient"}
+{"id": "q09", "query": "how long does finasteride take to work for hair loss", "relevant": ["NHS:finasteride-common-questions"], "kind": "patient"}
+{"id": "q10", "query": "when should I stop using minoxidil and see a doctor", "relevant": ["DAILYMED:1b5e2860-6855-4a65-8bbc-e064172a1adf", "DAILYMED:4d328537-b7f5-43cc-9837-c5a0c6c390f8"], "kind": "patient"}
+{"id": "q11", "query": "can women use minoxidil foam", "relevant": ["DAILYMED:4d328537-b7f5-43cc-9837-c5a0c6c390f8", "EUROPEPMC:PMC10334345"], "kind": "patient"}
+{"id": "q12", "query": "side effects of low dose oral minoxidil", "relevant": ["EUROPEPMC:PMC11942662"], "kind": "technical"}
+{"id": "q13", "query": "does platelet rich plasma work for hair loss", "relevant": ["EUROPEPMC:PMC6374694", "EUROPEPMC:PMC7216252"], "kind": "patient"}
+{"id": "q14", "query": "spironolactone for female hair loss", "relevant": ["EUROPEPMC:PMC10502763", "EUROPEPMC:PMC10334345"], "kind": "technical"}
+{"id": "q15", "query": "topical finasteride for androgenetic alopecia", "relevant": ["EUROPEPMC:PMC10561660"], "kind": "technical"}
+{"id": "q16", "query": "dutasteride injections into the scalp", "relevant": ["EUROPEPMC:PMC12690437"], "kind": "technical"}
+{"id": "q17", "query": "microneedling combined with minoxidil", "relevant": ["EUROPEPMC:PMC11890238"], "kind": "technical"}
+{"id": "q18", "query": "genetics of female pattern hair loss", "relevant": ["EUROPEPMC:PMC10379895"], "kind": "technical"}
+{"id": "q19", "query": "treatment for female pattern hair loss", "relevant": ["EUROPEPMC:PMC10334345", "EUROPEPMC:PMC10502763", "NHS:hair-loss"], "kind": "patient"}
+{"id": "q20", "query": "how to get rid of dandruff", "relevant": ["NHS:dandruff"], "kind": "lay"}
+{"id": "q21", "query": "what causes seborrheic dermatitis", "relevant": ["EUROPEPMC:PMC11942342", "EUROPEPMC:PMC12562114"], "kind": "patient"}
+{"id": "q22", "query": "does diet affect seborrhoeic dermatitis", "relevant": ["EUROPEPMC:PMC11333864"], "kind": "spelling"}
+{"id": "q23", "query": "ringworm on the scalp symptoms", "relevant": ["NHS:ringworm", "EUROPEPMC:PMC5283510", "EUROPEPMC:PMC11122068"], "kind": "lay"}
+{"id": "q24", "query": "tinea capitis in adults", "relevant": ["EUROPEPMC:PMC11122068"], "kind": "technical"}
+{"id": "q25", "query": "tinea capitis among schoolchildren", "relevant": ["EUROPEPMC:PMC9916598", "EUROPEPMC:PMC5283510"], "kind": "technical"}
+{"id": "q26", "query": "iron deficiency anemia symptoms including hair loss", "relevant": ["NHS:iron-deficiency-anaemia"], "kind": "spelling"}
+{"id": "q27", "query": "can an underactive thyroid cause hair loss", "relevant": ["NHS:underactive-thyroid"], "kind": "patient"}
+{"id": "q28", "query": "hormone condition affecting hair growth and periods", "relevant": ["NHS:pmos"], "kind": "lay"}
+{"id": "q29", "query": "psoriasis on the scalp treatment", "relevant": ["NHS:psoriasis"], "kind": "patient"}
+{"id": "q30", "query": "lichen planus causing bald patches on the scalp", "relevant": ["NHS:lichen-planus", "EUROPEPMC:PMC9133245"], "kind": "patient"}
+{"id": "q31", "query": "frontal fibrosing alopecia receding hairline", "relevant": ["EUROPEPMC:PMC9133245"], "kind": "technical"}
+{"id": "q32", "query": "treatment of scarring alopecia", "relevant": ["EUROPEPMC:PMC9133245", "EUROPEPMC:PMC5733188"], "kind": "technical"}
+{"id": "q33", "query": "hair shedding after covid infection", "relevant": ["EUROPEPMC:PMC9409133"], "kind": "patient"}
+{"id": "q34", "query": "what is telogen effluvium", "relevant": ["EUROPEPMC:PMC7320655", "EUROPEPMC:PMC9409133"], "kind": "patient"}
+{"id": "q35", "query": "phases of the hair growth cycle anagen catagen telogen", "relevant": ["EUROPEPMC:PMC9917549", "EUROPEPMC:PMC8953616", "EUROPEPMC:PMC7222612"], "kind": "technical"}
+{"id": "q36", "query": "hair follicle stem cell niche", "relevant": ["EUROPEPMC:PMC7073016", "EUROPEPMC:PMC7886855"], "kind": "technical"}
+{"id": "q37", "query": "vitamin D deficiency and hair loss", "relevant": ["EUROPEPMC:PMC5751255", "EUROPEPMC:PMC8759975", "EUROPEPMC:PMC12747802"], "kind": "patient"}
+{"id": "q38", "query": "trichoscopy findings in androgenetic alopecia", "relevant": ["EUROPEPMC:PMC11012765"], "kind": "technical"}
+{"id": "q39", "query": "when should I see a GP about my hair loss", "relevant": ["NHS:hair-loss"], "kind": "patient"}
+{"id": "q40", "query": "are wigs available on the NHS", "relevant": ["NHS:hair-loss"], "kind": "patient"}
+{"id": "q41", "query": "treating alopecia areata in children", "relevant": ["EUROPEPMC:PMC8556406"], "kind": "technical"}
+{"id": "q42", "query": "cytokines in alopecia areata patients", "relevant": ["EUROPEPMC:PMC8699846"], "kind": "technical"}
+{"id": "q43", "query": "stem cell therapy for hair loss", "relevant": ["EUROPEPMC:PMC6562814", "EUROPEPMC:PMC8953616"], "kind": "patient"}
+{"id": "q44", "query": "my hair is falling out in round patches", "relevant": ["NIAMS:alopecia-areata", "MEDLINEPLUS:alopecia-areata", "NHS:hair-loss"], "kind": "lay"}
+{"id": "q45", "query": "why am I going bald at 25", "relevant": ["MEDLINEPLUS:androgenetic-alopecia", "NHS:hair-loss"], "kind": "lay"}
+{"id": "q46", "query": "hair falling out a few months after having a baby", "relevant": ["EUROPEPMC:PMC7320655"], "kind": "lay"}
+{"id": "q47", "query": "itchy flaky scalp", "relevant": ["NHS:dandruff", "EUROPEPMC:PMC12562114"], "kind": "lay"}
+{"id": "x01", "query": "how to fix a car engine", "relevant": [], "kind": "out_of_scope"}
+{"id": "x02", "query": "what is the capital of France", "relevant": [], "kind": "out_of_scope"}
+{"id": "x03", "query": "best recipe for chocolate cake", "relevant": [], "kind": "out_of_scope"}
+{"id": "x04", "query": "how do I reset my wifi router", "relevant": [], "kind": "out_of_scope"}
+{"id": "x05", "query": "symptoms of a broken wrist", "relevant": [], "kind": "out_of_scope"}
+{"id": "x06", "query": "treatment for a heart attack", "relevant": [], "kind": "out_of_scope"}
+{"id": "x07", "query": "what is the stock price of Apple", "relevant": [], "kind": "out_of_scope"}

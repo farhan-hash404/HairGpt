@@ -1,11 +1,30 @@
 from __future__ import annotations
 
 import importlib
+import os
 import tempfile
 from io import BytesIO
+from pathlib import Path
 
-import pytest
-from fastapi.testclient import TestClient
+# --- Test configuration, set BEFORE any app module is imported ---------------
+# Unit tests check logic (grounding, prescription safety, abstention, fusion
+# maths) fast and offline. Retrieval QUALITY is measured by the benchmark in
+# scripts/eval_rag.py against the full corpus and real embeddings.
+_FIXTURES = Path(__file__).parent / "fixtures"
+os.environ.update({
+    "CORPUS_FILE": str(_FIXTURES / "corpus_subset.jsonl"),  # 14 real documents
+    "CHROMA_DIR": ":memory:",
+    "EMBEDDING_PROVIDER": "hashing",
+    "RAG_CROSS_ENCODER": "false",
+    # Hashing embeddings are lexical, so their cosines run lower than MiniLM's;
+    # the production threshold (0.43) is calibrated for the real model.
+    "RAG_MIN_RELEVANCE": "0.05",
+    "WARM_CACHES": "false",
+    "LLM_PROVIDER": "none",
+})
+
+import pytest  # noqa: E402
+from fastapi.testclient import TestClient  # noqa: E402
 
 
 @pytest.fixture

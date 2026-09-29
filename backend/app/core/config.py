@@ -38,14 +38,42 @@ class Settings(BaseSettings):
     cv_model_dir: str = "./models"
 
     # RAG
-    embedding_provider: str = "hashing"
-    embedding_dim: int = 768
+    # onnx_minilm: real 384-d semantic embeddings via ONNX Runtime (no PyTorch).
+    # hashing: dependency-free fallback used by the unit tests.
+    embedding_provider: str = "onnx_minilm"
+    embedding_dim: int = 384
     rag_top_k: int = 5
+    corpus_file: str = "./data/corpus/documents.jsonl"
+    chroma_dir: str = "./data/chroma"
+    # Cross-encoder reranking (local ONNX). Best on the benchmark by every
+    # precision metric; ~1 s per query on a laptop CPU.
+    rag_cross_encoder: bool = True
+    # Abstention: refuse only when BOTH signals say the corpus has nothing
+    # relevant. Thresholds sit in the gap measured on the benchmark (in-scope
+    # cosine >= 0.52 vs out-of-scope <= 0.34; the cross-encoder under-scores lay
+    # phrasing, so it cannot veto alone). Recalibrate as the benchmark grows.
+    rag_min_relevance: float = 0.43
+    rag_min_ce_logit: float = -5.0
+    # Pre-compute recommendation evidence in a background thread at startup.
+    warm_caches: bool = True
 
-    # LLM
-    llm_provider: str = "mock"
-    llm_model: str = "claude-sonnet-5"
+    # LLM — "auto" picks the first provider with a key, else the deterministic
+    # extractive path (fully grounded, never calls a model).
+    llm_provider: str = "auto"  # auto | gemini | openai | anthropic | bedrock | none
+    llm_model: str = ""  # optional override of the provider's default model
+    gemini_api_key: str | None = None
+    gemini_model: str = "gemini-2.5-flash"
+    openai_api_key: str | None = None
+    openai_model: str = "gpt-5-mini"
     anthropic_api_key: str | None = None
+    anthropic_model: str = "claude-sonnet-5"
+    bedrock_model_id: str | None = None
+    aws_region: str = "us-east-1"
+    # Latency budget for synchronous requests: past this the pipeline falls back
+    # to the deterministic explainer rather than keep the user waiting.
+    llm_timeout_s: float = 6.0
+    # Regeneration attempts when the judge rejects an explanation.
+    llm_max_revisions: int = 1
 
     # Safety
     safety_strict: bool = True

@@ -1,0 +1,65 @@
+{
+  "_comment": [
+    "Copy to manifest.json and set CV_BACKEND=torch to run real models.",
+    "The `validation` block is written by `python -m scripts.evaluate_model`.",
+    "Editing it by hand will NOT promote a model: the loader re-derives pass/fail",
+    "from the recorded metrics via app.cv.manifest.validation_passes, so a model",
+    "whose numbers do not clear the thresholds is rejected no matter what",
+    "`passed` says."
+  ],
+  "models": [
+    {
+      "capability": "segmenter",
+      "name": "hair-scalp-seg",
+      "version": "1.0.0",
+      "checkpoint": "hair_scalp_seg_v1.pt",
+      "architecture": "torchscript",
+      "input_size": 512,
+      "labels": ["background", "hair", "scalp"],
+      "model_card": "docs/model-cards/hair-scalp-seg-1.0.0.md",
+      "validation": {
+        "evaluated_at": "",
+        "dataset_id": "",
+        "overall_score": 0.0,
+        "worst_group_score": 0.0,
+        "worst_best_gap": 1.0,
+        "calibration_error": 1.0,
+        "subgroup_axes": [],
+        "min_group_samples": 0,
+        "passed": false,
+        "failures": ["no evaluation record"]
+      }
+    },
+    {
+      "capability": "face",
+      "name": "skin-attributes",
+      "version": "0.9.0",
+      "checkpoint": "skin_attributes_v09.pt",
+      "architecture": "torchscript",
+      "input_size": 384,
+      "labels": [
+        "oiliness",
+        "dryness",
+        "redness",
+        "pigmentation",
+        "texture",
+        "pore_visibility",
+        "fine_lines",
+        "under_eye"
+      ],
+      "model_card": "docs/model-cards/skin-attributes-0.9.0.md",
+      "validation": {
+        "evaluated_at": "",
+        "dataset_id": "",
+        "overall_score": 0.0,
+        "worst_group_score": 0.0,
+        "worst_best_gap": 1.0,
+        "calibration_error": 1.0,
+        "subgroup_axes": [],
+        "min_group_samples": 0,
+        "passed": false,
+        "failures": ["no evaluation record"]
+      }
+    }
+  ]
+}

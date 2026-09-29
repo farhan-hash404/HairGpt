@@ -1,0 +1,11 @@
+# Development, evaluation and ML tooling — not installed in the deployed image.
+-r requirements.txt
+
+pytest==8.3.4
+
+# Experiment tracking and evaluation reports
+mlflow==3.16.1
+pandas==3.0.6
+scikit-learn==1.9.1
+matplotlib==3.11.2
+seaborn==0.13.2

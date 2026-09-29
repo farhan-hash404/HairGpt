@@ -20,25 +20,44 @@ from app.api.routers import (
 )
 from app.core.config import settings
 from app.db.session import SessionLocal, init_db
-from app.rag.ingest import seed_corpus
+from app.rag.ingest import ensure_evidence
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 log = logging.getLogger("hairgpt")
 
 
+def _warm_caches() -> None:
+    """Pre-compute rule evidence so the first analysis is not slowed by the reranker."""
+    from app.recommendations.engine import warm_cache
+
+    db = SessionLocal()
+    try:
+        log.info("warmed evidence for %d recommendation rules", warm_cache(db))
+    except Exception as exc:  # warming is an optimisation, never a startup failure
+        log.warning("cache warm-up failed: %s", exc)
+    finally:
+        db.close()
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Dev convenience: create tables and seed the medical corpus. Production uses
-    # Alembic migrations + an explicit admin ingest, not auto-create.
+    # Dev convenience: create tables. Production uses Alembic migrations.
     if not settings.is_prod:
         init_db()
-        db = SessionLocal()
-        try:
-            n = seed_corpus(db)
-            if n:
-                log.info("Seeded %d evidence documents", n)
-        finally:
-            db.close()
+    # Every environment needs the evidence index. It is idempotent: when the
+    # corpus and vectors are already in sync (e.g. baked into the Docker image)
+    # this is a quick check, not a rebuild.
+    db = SessionLocal()
+    try:
+        info = ensure_evidence(db)
+        log.info("evidence index: %s documents, %s chunks (%s)",
+                 info.get("documents"), info.get("chunks"), info.get("embedding"))
+    finally:
+        db.close()
+    if settings.warm_caches:
+        import threading
+
+        threading.Thread(target=_warm_caches, name="warm-caches", daemon=True).start()
     log.info(
         "HairGPT %s started | CV_BACKEND=%s LLM=%s EMB=%s DB=%s",
         __version__, settings.cv_backend, settings.llm_provider,

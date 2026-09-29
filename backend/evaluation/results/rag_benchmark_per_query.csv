@@ -1,0 +1,217 @@
+variant,id,kind,query,first_relevant_rank,top1,recall_at_5,relevance_signal,latency_ms
+bm25,q01,patient,how many hairs a day is it normal to lose,1.0,MEDLINEPLUS:hair-loss,1.0,0.7457,653.7
+bm25,q02,lay,is male pattern baldness inherited,1.0,MEDLINEPLUS:androgenetic-alopecia,1.0,0.648,100.2
+bm25,q03,patient,what causes alopecia areata,1.0,NIAMS:alopecia-areata,0.6666666666666666,0.7878,89.0
+bm25,q04,patient,treatment options for alopecia areata,4.0,EUROPEPMC:PMC5751255,0.5,0.6802,86.0
+bm25,q05,technical,JAK inhibitors for alopecia areata,3.0,EUROPEPMC:PMC7073016,1.0,0.7148,87.8
+bm25,q06,patient,side effects of finasteride,1.0,NHS:finasteride-side-effects,1.0,0.6946,76.4
+bm25,q07,patient,can finasteride affect fertility or pregnancy,1.0,NHS:finasteride-pregnancy,1.0,0.8165,81.0
+bm25,q08,patient,who should not take finasteride,1.0,NHS:finasteride-who-can-take,1.0,0.6526,81.1
+bm25,q09,patient,how long does finasteride take to work for hair loss,1.0,NHS:finasteride-common-questions,1.0,0.7762,80.9
+bm25,q10,patient,when should I stop using minoxidil and see a doctor,1.0,DAILYMED:1b5e2860-6855-4a65-8bbc-e064172a1adf,1.0,0.5051,85.5
+bm25,q11,patient,can women use minoxidil foam,1.0,DAILYMED:4d328537-b7f5-43cc-9837-c5a0c6c390f8,1.0,0.6174,78.3
+bm25,q12,technical,side effects of low dose oral minoxidil,3.0,EUROPEPMC:PMC10334345,1.0,0.6132,87.0
+bm25,q13,patient,does platelet rich plasma work for hair loss,2.0,EUROPEPMC:PMC6562814,1.0,0.6802,80.2
+bm25,q14,technical,spironolactone for female hair loss,1.0,EUROPEPMC:PMC10502763,1.0,0.8421,85.0
+bm25,q15,technical,topical finasteride for androgenetic alopecia,1.0,EUROPEPMC:PMC10561660,1.0,0.8957,82.4
+bm25,q16,technical,dutasteride injections into the scalp,3.0,EUROPEPMC:PMC6374694,1.0,0.4787,115.4
+bm25,q17,technical,microneedling combined with minoxidil,1.0,EUROPEPMC:PMC11890238,1.0,0.6595,96.4
+bm25,q18,technical,genetics of female pattern hair loss,1.0,EUROPEPMC:PMC10379895,1.0,0.7512,146.4
+bm25,q19,patient,treatment for female pattern hair loss,1.0,EUROPEPMC:PMC10502763,1.0,0.6549,152.5
+bm25,q20,lay,how to get rid of dandruff,1.0,NHS:dandruff,1.0,0.6453,122.4
+bm25,q21,patient,what causes seborrheic dermatitis,4.0,EUROPEPMC:PMC11333864,1.0,0.551,89.8
+bm25,q22,spelling,does diet affect seborrhoeic dermatitis,1.0,EUROPEPMC:PMC11333864,1.0,0.8118,80.8
+bm25,q23,lay,ringworm on the scalp symptoms,1.0,NHS:ringworm,1.0,0.8246,84.4
+bm25,q24,technical,tinea capitis in adults,1.0,EUROPEPMC:PMC11122068,1.0,0.7558,80.9
+bm25,q25,technical,tinea capitis among schoolchildren,1.0,EUROPEPMC:PMC9916598,1.0,0.8275,80.4
+bm25,q26,spelling,iron deficiency anemia symptoms including hair loss,1.0,NHS:iron-deficiency-anaemia,1.0,0.7309,80.9
+bm25,q27,patient,can an underactive thyroid cause hair loss,1.0,NHS:underactive-thyroid,1.0,0.612,76.1
+bm25,q28,lay,hormone condition affecting hair growth and periods,1.0,NHS:pmos,1.0,0.5227,77.5
+bm25,q29,patient,psoriasis on the scalp treatment,1.0,NHS:psoriasis,1.0,0.6808,84.2
+bm25,q30,patient,lichen planus causing bald patches on the scalp,1.0,NHS:lichen-planus,1.0,0.5556,78.3
+bm25,q31,technical,frontal fibrosing alopecia receding hairline,1.0,EUROPEPMC:PMC9133245,1.0,0.6199,84.1
+bm25,q32,technical,treatment of scarring alopecia,1.0,EUROPEPMC:PMC5733188,1.0,0.4849,129.4
+bm25,q33,patient,hair shedding after covid infection,1.0,EUROPEPMC:PMC9409133,1.0,0.7113,92.5
+bm25,q34,patient,what is telogen effluvium,1.0,EUROPEPMC:PMC7320655,1.0,0.5515,90.5
+bm25,q35,technical,phases of the hair growth cycle anagen catagen telogen,1.0,EUROPEPMC:PMC9917549,0.6666666666666666,0.7503,98.8
+bm25,q36,technical,hair follicle stem cell niche,1.0,EUROPEPMC:PMC7073016,1.0,0.7068,89.8
+bm25,q37,patient,vitamin D deficiency and hair loss,1.0,EUROPEPMC:PMC12747802,1.0,0.779,79.1
+bm25,q38,technical,trichoscopy findings in androgenetic alopecia,1.0,EUROPEPMC:PMC11012765,1.0,0.8068,77.3
+bm25,q39,patient,when should I see a GP about my hair loss,1.0,NHS:hair-loss,1.0,0.8283,72.9
+bm25,q40,patient,are wigs available on the NHS,1.0,NHS:hair-loss,1.0,0.7281,71.1
+bm25,q41,technical,treating alopecia areata in children,3.0,MEDLINEPLUS:alopecia-areata,1.0,0.6734,59.2
+bm25,q42,technical,cytokines in alopecia areata patients,1.0,EUROPEPMC:PMC8699846,1.0,0.8206,79.5
+bm25,q43,patient,stem cell therapy for hair loss,1.0,EUROPEPMC:PMC6562814,1.0,0.7291,74.2
+bm25,q44,lay,my hair is falling out in round patches,1.0,MEDLINEPLUS:alopecia-areata,0.6666666666666666,0.5767,72.3
+bm25,q45,lay,why am I going bald at 25,3.0,EUROPEPMC:PMC5751255,0.5,0.5303,77.5
+bm25,q46,lay,hair falling out a few months after having a baby,,MEDLINEPLUS:hair-problems,0.0,0.553,72.5
+bm25,q47,lay,itchy flaky scalp,1.0,NHS:dandruff,1.0,0.5639,74.2
+bm25,x01,out_of_scope,how to fix a car engine,,,,0.0,69.1
+bm25,x02,out_of_scope,what is the capital of France,,EUROPEPMC:PMC5283510,,0.0483,65.8
+bm25,x03,out_of_scope,best recipe for chocolate cake,,NHS:ringworm,,-0.0041,70.0
+bm25,x04,out_of_scope,how do I reset my wifi router,,,,0.0,109.8
+bm25,x05,out_of_scope,symptoms of a broken wrist,,NIAMS:alopecia-areata,,0.1448,78.6
+bm25,x06,out_of_scope,treatment for a heart attack,,NHS:underactive-thyroid,,0.2077,80.4
+bm25,x07,out_of_scope,what is the stock price of Apple,,,,0.0,73.5
+dense,q01,patient,how many hairs a day is it normal to lose,1.0,NHS:hair-loss,1.0,0.7574,85.2
+dense,q02,lay,is male pattern baldness inherited,1.0,MEDLINEPLUS:androgenetic-alopecia,1.0,0.7174,83.9
+dense,q03,patient,what causes alopecia areata,1.0,NIAMS:alopecia-areata,1.0,0.7878,76.4
+dense,q04,patient,treatment options for alopecia areata,1.0,EUROPEPMC:PMC8556406,0.5,0.8099,73.9
+dense,q05,technical,JAK inhibitors for alopecia areata,1.0,EUROPEPMC:PMC9470217,1.0,0.8591,71.8
+dense,q06,patient,side effects of finasteride,1.0,NHS:finasteride-side-effects,1.0,0.7609,72.1
+dense,q07,patient,can finasteride affect fertility or pregnancy,1.0,NHS:finasteride-pregnancy,1.0,0.8165,71.9
+dense,q08,patient,who should not take finasteride,1.0,NHS:finasteride-who-can-take,1.0,0.712,77.7
+dense,q09,patient,how long does finasteride take to work for hair loss,1.0,NHS:finasteride-common-questions,1.0,0.7762,77.6
+dense,q10,patient,when should I stop using minoxidil and see a doctor,5.0,EUROPEPMC:PMC11942662,0.5,0.6275,74.7
+dense,q11,patient,can women use minoxidil foam,2.0,DAILYMED:1b5e2860-6855-4a65-8bbc-e064172a1adf,1.0,0.6744,73.3
+dense,q12,technical,side effects of low dose oral minoxidil,1.0,EUROPEPMC:PMC11942662,1.0,0.6713,77.9
+dense,q13,patient,does platelet rich plasma work for hair loss,1.0,EUROPEPMC:PMC6374694,1.0,0.7267,77.1
+dense,q14,technical,spironolactone for female hair loss,1.0,EUROPEPMC:PMC10502763,1.0,0.8871,77.0
+dense,q15,technical,topical finasteride for androgenetic alopecia,1.0,EUROPEPMC:PMC10561660,1.0,0.8957,78.2
+dense,q16,technical,dutasteride injections into the scalp,1.0,EUROPEPMC:PMC12690437,1.0,0.626,175.9
+dense,q17,technical,microneedling combined with minoxidil,1.0,EUROPEPMC:PMC11890238,1.0,0.6595,78.9
+dense,q18,technical,genetics of female pattern hair loss,1.0,EUROPEPMC:PMC10379895,1.0,0.7813,78.2
+dense,q19,patient,treatment for female pattern hair loss,1.0,EUROPEPMC:PMC10334345,1.0,0.7659,79.5
+dense,q20,lay,how to get rid of dandruff,1.0,NHS:dandruff,1.0,0.7448,74.1
+dense,q21,patient,what causes seborrheic dermatitis,1.0,EUROPEPMC:PMC12562114,1.0,0.7689,76.3
+dense,q22,spelling,does diet affect seborrhoeic dermatitis,1.0,EUROPEPMC:PMC11333864,1.0,0.8118,82.3
+dense,q23,lay,ringworm on the scalp symptoms,1.0,NHS:ringworm,1.0,0.8246,70.5
+dense,q24,technical,tinea capitis in adults,1.0,EUROPEPMC:PMC11122068,1.0,0.885,72.6
+dense,q25,technical,tinea capitis among schoolchildren,1.0,EUROPEPMC:PMC9916598,1.0,0.8909,74.0
+dense,q26,spelling,iron deficiency anemia symptoms including hair loss,1.0,NHS:iron-deficiency-anaemia,1.0,0.7309,69.6
+dense,q27,patient,can an underactive thyroid cause hair loss,2.0,EUROPEPMC:PMC9917549,1.0,0.787,71.5
+dense,q28,lay,hormone condition affecting hair growth and periods,,EUROPEPMC:PMC9917549,0.0,0.7234,78.5
+dense,q29,patient,psoriasis on the scalp treatment,1.0,NHS:psoriasis,1.0,0.685,75.9
+dense,q30,patient,lichen planus causing bald patches on the scalp,1.0,EUROPEPMC:PMC9133245,1.0,0.7465,78.9
+dense,q31,technical,frontal fibrosing alopecia receding hairline,,EUROPEPMC:PMC9917549,0.0,0.7094,76.0
+dense,q32,technical,treatment of scarring alopecia,8.0,EUROPEPMC:PMC8953616,0.0,0.7438,72.4
+dense,q33,patient,hair shedding after covid infection,1.0,EUROPEPMC:PMC9409133,1.0,0.7113,77.9
+dense,q34,patient,what is telogen effluvium,1.0,EUROPEPMC:PMC7320655,1.0,0.7888,86.3
+dense,q35,technical,phases of the hair growth cycle anagen catagen telogen,1.0,EUROPEPMC:PMC9917549,0.6666666666666666,0.795,95.3
+dense,q36,technical,hair follicle stem cell niche,1.0,EUROPEPMC:PMC7073016,1.0,0.8076,82.0
+dense,q37,patient,vitamin D deficiency and hair loss,1.0,EUROPEPMC:PMC12747802,1.0,0.8365,77.0
+dense,q38,technical,trichoscopy findings in androgenetic alopecia,1.0,EUROPEPMC:PMC11012765,1.0,0.8703,84.1
+dense,q39,patient,when should I see a GP about my hair loss,1.0,NHS:hair-loss,1.0,0.8283,73.4
+dense,q40,patient,are wigs available on the NHS,1.0,NHS:hair-loss,1.0,0.7281,70.6
+dense,q41,technical,treating alopecia areata in children,1.0,EUROPEPMC:PMC8556406,1.0,0.8911,71.6
+dense,q42,technical,cytokines in alopecia areata patients,1.0,EUROPEPMC:PMC8699846,1.0,0.8269,68.3
+dense,q43,patient,stem cell therapy for hair loss,1.0,EUROPEPMC:PMC6562814,1.0,0.783,81.4
+dense,q44,lay,my hair is falling out in round patches,1.0,NIAMS:alopecia-areata,1.0,0.577,76.3
+dense,q45,lay,why am I going bald at 25,1.0,MEDLINEPLUS:androgenetic-alopecia,0.5,0.6012,73.4
+dense,q46,lay,hair falling out a few months after having a baby,2.0,MEDLINEPLUS:hair-problems,1.0,0.553,75.5
+dense,q47,lay,itchy flaky scalp,1.0,NHS:dandruff,0.5,0.6312,75.3
+dense,x01,out_of_scope,how to fix a car engine,,DAILYMED:4d328537-b7f5-43cc-9837-c5a0c6c390f8,,0.2215,75.7
+dense,x02,out_of_scope,what is the capital of France,,NHS:dandruff,,0.1586,71.1
+dense,x03,out_of_scope,best recipe for chocolate cake,,NHS:lichen-planus,,0.1452,71.7
+dense,x04,out_of_scope,how do I reset my wifi router,,DAILYMED:4d328537-b7f5-43cc-9837-c5a0c6c390f8,,0.1101,72.1
+dense,x05,out_of_scope,symptoms of a broken wrist,,NHS:finasteride-side-effects,,0.3221,72.6
+dense,x06,out_of_scope,treatment for a heart attack,,EUROPEPMC:PMC11942662,,0.4037,85.5
+dense,x07,out_of_scope,what is the stock price of Apple,,EUROPEPMC:PMC6562814,,0.1541,77.6
+hybrid-rrf,q01,patient,how many hairs a day is it normal to lose,1.0,NHS:hair-loss,1.0,0.7574,92.9
+hybrid-rrf,q02,lay,is male pattern baldness inherited,1.0,MEDLINEPLUS:androgenetic-alopecia,1.0,0.648,106.8
+hybrid-rrf,q03,patient,what causes alopecia areata,1.0,NIAMS:alopecia-areata,0.6666666666666666,0.7878,89.3
+hybrid-rrf,q04,patient,treatment options for alopecia areata,1.0,NIAMS:alopecia-areata-treatment,0.5,0.7882,81.8
+hybrid-rrf,q05,technical,JAK inhibitors for alopecia areata,2.0,EUROPEPMC:PMC8556406,1.0,0.814,81.4
+hybrid-rrf,q06,patient,side effects of finasteride,1.0,NHS:finasteride-side-effects,1.0,0.7609,82.0
+hybrid-rrf,q07,patient,can finasteride affect fertility or pregnancy,1.0,NHS:finasteride-pregnancy,1.0,0.8165,82.0
+hybrid-rrf,q08,patient,who should not take finasteride,1.0,NHS:finasteride-who-can-take,1.0,0.712,80.3
+hybrid-rrf,q09,patient,how long does finasteride take to work for hair loss,1.0,NHS:finasteride-common-questions,1.0,0.7762,86.2
+hybrid-rrf,q10,patient,when should I stop using minoxidil and see a doctor,1.0,DAILYMED:4d328537-b7f5-43cc-9837-c5a0c6c390f8,1.0,0.5243,89.8
+hybrid-rrf,q11,patient,can women use minoxidil foam,1.0,DAILYMED:4d328537-b7f5-43cc-9837-c5a0c6c390f8,1.0,0.6719,80.2
+hybrid-rrf,q12,technical,side effects of low dose oral minoxidil,1.0,EUROPEPMC:PMC11942662,1.0,0.6532,80.9
+hybrid-rrf,q13,patient,does platelet rich plasma work for hair loss,1.0,EUROPEPMC:PMC6374694,1.0,0.7267,79.5
+hybrid-rrf,q14,technical,spironolactone for female hair loss,1.0,EUROPEPMC:PMC10502763,1.0,0.8871,80.2
+hybrid-rrf,q15,technical,topical finasteride for androgenetic alopecia,1.0,EUROPEPMC:PMC10561660,1.0,0.8957,87.7
+hybrid-rrf,q16,technical,dutasteride injections into the scalp,1.0,EUROPEPMC:PMC12690437,1.0,0.604,87.8
+hybrid-rrf,q17,technical,microneedling combined with minoxidil,1.0,EUROPEPMC:PMC11890238,1.0,0.6595,78.6
+hybrid-rrf,q18,technical,genetics of female pattern hair loss,1.0,EUROPEPMC:PMC10379895,1.0,0.7813,90.9
+hybrid-rrf,q19,patient,treatment for female pattern hair loss,1.0,EUROPEPMC:PMC10334345,1.0,0.7593,94.0
+hybrid-rrf,q20,lay,how to get rid of dandruff,1.0,NHS:dandruff,1.0,0.6453,88.5
+hybrid-rrf,q21,patient,what causes seborrheic dermatitis,2.0,EUROPEPMC:PMC11333864,1.0,0.6834,74.5
+hybrid-rrf,q22,spelling,does diet affect seborrhoeic dermatitis,1.0,EUROPEPMC:PMC11333864,1.0,0.8118,88.8
+hybrid-rrf,q23,lay,ringworm on the scalp symptoms,1.0,NHS:ringworm,1.0,0.8246,82.8
+hybrid-rrf,q24,technical,tinea capitis in adults,1.0,EUROPEPMC:PMC11122068,1.0,0.885,81.5
+hybrid-rrf,q25,technical,tinea capitis among schoolchildren,1.0,EUROPEPMC:PMC9916598,1.0,0.8505,80.4
+hybrid-rrf,q26,spelling,iron deficiency anemia symptoms including hair loss,1.0,NHS:iron-deficiency-anaemia,1.0,0.7309,81.2
+hybrid-rrf,q27,patient,can an underactive thyroid cause hair loss,1.0,NHS:underactive-thyroid,1.0,0.6719,79.8
+hybrid-rrf,q28,lay,hormone condition affecting hair growth and periods,6.0,EUROPEPMC:PMC9917549,0.0,0.6976,85.8
+hybrid-rrf,q29,patient,psoriasis on the scalp treatment,1.0,NHS:psoriasis,1.0,0.685,82.3
+hybrid-rrf,q30,patient,lichen planus causing bald patches on the scalp,2.0,EUROPEPMC:PMC5283510,1.0,0.6734,83.2
+hybrid-rrf,q31,technical,frontal fibrosing alopecia receding hairline,6.0,EUROPEPMC:PMC10379895,0.0,0.6567,81.2
+hybrid-rrf,q32,technical,treatment of scarring alopecia,3.0,EUROPEPMC:PMC8953616,1.0,0.7438,79.5
+hybrid-rrf,q33,patient,hair shedding after covid infection,1.0,EUROPEPMC:PMC9409133,1.0,0.7113,93.3
+hybrid-rrf,q34,patient,what is telogen effluvium,1.0,EUROPEPMC:PMC7320655,1.0,0.7888,87.6
+hybrid-rrf,q35,technical,phases of the hair growth cycle anagen catagen telogen,1.0,EUROPEPMC:PMC9917549,0.6666666666666666,0.7503,85.7
+hybrid-rrf,q36,technical,hair follicle stem cell niche,1.0,EUROPEPMC:PMC7073016,1.0,0.8076,89.4
+hybrid-rrf,q37,patient,vitamin D deficiency and hair loss,1.0,EUROPEPMC:PMC12747802,1.0,0.8365,88.9
+hybrid-rrf,q38,technical,trichoscopy findings in androgenetic alopecia,1.0,EUROPEPMC:PMC11012765,1.0,0.8703,87.9
+hybrid-rrf,q39,patient,when should I see a GP about my hair loss,1.0,NHS:hair-loss,1.0,0.8283,84.1
+hybrid-rrf,q40,patient,are wigs available on the NHS,1.0,NHS:hair-loss,1.0,0.7281,88.0
+hybrid-rrf,q41,technical,treating alopecia areata in children,1.0,EUROPEPMC:PMC8556406,1.0,0.8428,80.8
+hybrid-rrf,q42,technical,cytokines in alopecia areata patients,1.0,EUROPEPMC:PMC8699846,1.0,0.8269,76.4
+hybrid-rrf,q43,patient,stem cell therapy for hair loss,1.0,EUROPEPMC:PMC6562814,1.0,0.783,71.9
+hybrid-rrf,q44,lay,my hair is falling out in round patches,1.0,MEDLINEPLUS:alopecia-areata,1.0,0.5767,77.0
+hybrid-rrf,q45,lay,why am I going bald at 25,9.0,EUROPEPMC:PMC5751255,0.0,0.5303,74.5
+hybrid-rrf,q46,lay,hair falling out a few months after having a baby,4.0,MEDLINEPLUS:hair-problems,1.0,0.553,87.4
+hybrid-rrf,q47,lay,itchy flaky scalp,1.0,NHS:dandruff,1.0,0.6312,79.7
+hybrid-rrf,x01,out_of_scope,how to fix a car engine,,DAILYMED:4d328537-b7f5-43cc-9837-c5a0c6c390f8,,0.2215,77.6
+hybrid-rrf,x02,out_of_scope,what is the capital of France,,EUROPEPMC:PMC5283510,,0.1016,75.1
+hybrid-rrf,x03,out_of_scope,best recipe for chocolate cake,,NHS:lichen-planus,,0.1452,84.1
+hybrid-rrf,x04,out_of_scope,how do I reset my wifi router,,DAILYMED:4d328537-b7f5-43cc-9837-c5a0c6c390f8,,0.1101,91.5
+hybrid-rrf,x05,out_of_scope,symptoms of a broken wrist,,NHS:underactive-thyroid,,0.2354,94.5
+hybrid-rrf,x06,out_of_scope,treatment for a heart attack,,DAILYMED:4d328537-b7f5-43cc-9837-c5a0c6c390f8,,0.3365,105.0
+hybrid-rrf,x07,out_of_scope,what is the stock price of Apple,,EUROPEPMC:PMC6562814,,0.1541,97.9
+hybrid-rrf+cross-encoder,q01,patient,how many hairs a day is it normal to lose,1.0,NHS:hair-loss,1.0,8.354,890.9
+hybrid-rrf+cross-encoder,q02,lay,is male pattern baldness inherited,1.0,MEDLINEPLUS:androgenetic-alopecia,1.0,4.34,1512.2
+hybrid-rrf+cross-encoder,q03,patient,what causes alopecia areata,1.0,MEDLINEPLUS:alopecia-areata,0.6666666666666666,9.918,1120.2
+hybrid-rrf+cross-encoder,q04,patient,treatment options for alopecia areata,1.0,NIAMS:alopecia-areata-treatment,0.5,8.296,1554.3
+hybrid-rrf+cross-encoder,q05,technical,JAK inhibitors for alopecia areata,2.0,EUROPEPMC:PMC8556406,1.0,8.41,1156.7
+hybrid-rrf+cross-encoder,q06,patient,side effects of finasteride,1.0,NHS:finasteride-side-effects,1.0,9.325,920.7
+hybrid-rrf+cross-encoder,q07,patient,can finasteride affect fertility or pregnancy,1.0,NHS:finasteride-pregnancy,1.0,9.388,1181.4
+hybrid-rrf+cross-encoder,q08,patient,who should not take finasteride,1.0,NHS:finasteride-who-can-take,1.0,8.09,758.5
+hybrid-rrf+cross-encoder,q09,patient,how long does finasteride take to work for hair loss,1.0,NHS:finasteride-common-questions,1.0,7.835,1117.8
+hybrid-rrf+cross-encoder,q10,patient,when should I stop using minoxidil and see a doctor,1.0,DAILYMED:1b5e2860-6855-4a65-8bbc-e064172a1adf,1.0,5.865,1261.2
+hybrid-rrf+cross-encoder,q11,patient,can women use minoxidil foam,1.0,DAILYMED:4d328537-b7f5-43cc-9837-c5a0c6c390f8,1.0,7.74,854.5
+hybrid-rrf+cross-encoder,q12,technical,side effects of low dose oral minoxidil,2.0,EUROPEPMC:PMC10334345,1.0,7.022,1310.7
+hybrid-rrf+cross-encoder,q13,patient,does platelet rich plasma work for hair loss,1.0,EUROPEPMC:PMC6374694,1.0,8.245,1148.7
+hybrid-rrf+cross-encoder,q14,technical,spironolactone for female hair loss,1.0,EUROPEPMC:PMC10502763,1.0,9.669,1214.4
+hybrid-rrf+cross-encoder,q15,technical,topical finasteride for androgenetic alopecia,1.0,EUROPEPMC:PMC10561660,1.0,9.601,1343.8
+hybrid-rrf+cross-encoder,q16,technical,dutasteride injections into the scalp,1.0,EUROPEPMC:PMC12690437,1.0,2.794,1228.3
+hybrid-rrf+cross-encoder,q17,technical,microneedling combined with minoxidil,1.0,EUROPEPMC:PMC11890238,1.0,8.965,1167.3
+hybrid-rrf+cross-encoder,q18,technical,genetics of female pattern hair loss,1.0,EUROPEPMC:PMC10379895,1.0,8.827,1013.3
+hybrid-rrf+cross-encoder,q19,patient,treatment for female pattern hair loss,1.0,EUROPEPMC:PMC10502763,1.0,9.554,1383.4
+hybrid-rrf+cross-encoder,q20,lay,how to get rid of dandruff,1.0,NHS:dandruff,1.0,7.801,1128.7
+hybrid-rrf+cross-encoder,q21,patient,what causes seborrheic dermatitis,2.0,EUROPEPMC:PMC11333864,1.0,7.824,1583.8
+hybrid-rrf+cross-encoder,q22,spelling,does diet affect seborrhoeic dermatitis,1.0,EUROPEPMC:PMC11333864,1.0,7.925,1059.0
+hybrid-rrf+cross-encoder,q23,lay,ringworm on the scalp symptoms,1.0,NHS:ringworm,1.0,8.067,1101.4
+hybrid-rrf+cross-encoder,q24,technical,tinea capitis in adults,1.0,EUROPEPMC:PMC11122068,1.0,10.0,1732.0
+hybrid-rrf+cross-encoder,q25,technical,tinea capitis among schoolchildren,1.0,EUROPEPMC:PMC9916598,1.0,9.592,1214.5
+hybrid-rrf+cross-encoder,q26,spelling,iron deficiency anemia symptoms including hair loss,1.0,NHS:iron-deficiency-anaemia,1.0,8.437,1051.5
+hybrid-rrf+cross-encoder,q27,patient,can an underactive thyroid cause hair loss,1.0,NHS:underactive-thyroid,1.0,6.327,927.3
+hybrid-rrf+cross-encoder,q28,lay,hormone condition affecting hair growth and periods,1.0,NHS:pmos,1.0,8.205,1521.4
+hybrid-rrf+cross-encoder,q29,patient,psoriasis on the scalp treatment,1.0,NHS:psoriasis,1.0,6.386,991.4
+hybrid-rrf+cross-encoder,q30,patient,lichen planus causing bald patches on the scalp,1.0,NHS:lichen-planus,1.0,5.995,1841.1
+hybrid-rrf+cross-encoder,q31,technical,frontal fibrosing alopecia receding hairline,1.0,EUROPEPMC:PMC9133245,1.0,6.329,1509.0
+hybrid-rrf+cross-encoder,q32,technical,treatment of scarring alopecia,1.0,EUROPEPMC:PMC9133245,0.5,7.097,1529.3
+hybrid-rrf+cross-encoder,q33,patient,hair shedding after covid infection,1.0,EUROPEPMC:PMC9409133,1.0,6.799,1294.4
+hybrid-rrf+cross-encoder,q34,patient,what is telogen effluvium,1.0,EUROPEPMC:PMC7320655,1.0,10.772,1099.8
+hybrid-rrf+cross-encoder,q35,technical,phases of the hair growth cycle anagen catagen telogen,1.0,EUROPEPMC:PMC9917549,0.3333333333333333,8.772,1292.2
+hybrid-rrf+cross-encoder,q36,technical,hair follicle stem cell niche,1.0,EUROPEPMC:PMC7073016,1.0,8.872,1459.3
+hybrid-rrf+cross-encoder,q37,patient,vitamin D deficiency and hair loss,1.0,EUROPEPMC:PMC8759975,1.0,7.907,1238.4
+hybrid-rrf+cross-encoder,q38,technical,trichoscopy findings in androgenetic alopecia,1.0,EUROPEPMC:PMC11012765,1.0,8.989,1162.3
+hybrid-rrf+cross-encoder,q39,patient,when should I see a GP about my hair loss,1.0,NHS:hair-loss,1.0,4.949,992.4
+hybrid-rrf+cross-encoder,q40,patient,are wigs available on the NHS,1.0,NHS:hair-loss,1.0,8.615,1059.5
+hybrid-rrf+cross-encoder,q41,technical,treating alopecia areata in children,1.0,EUROPEPMC:PMC8556406,1.0,8.016,1512.4
+hybrid-rrf+cross-encoder,q42,technical,cytokines in alopecia areata patients,1.0,EUROPEPMC:PMC8699846,1.0,8.481,1179.0
+hybrid-rrf+cross-encoder,q43,patient,stem cell therapy for hair loss,1.0,EUROPEPMC:PMC6562814,1.0,8.779,1202.2
+hybrid-rrf+cross-encoder,q44,lay,my hair is falling out in round patches,1.0,MEDLINEPLUS:alopecia-areata,0.6666666666666666,6.317,1193.9
+hybrid-rrf+cross-encoder,q45,lay,why am I going bald at 25,2.0,EUROPEPMC:PMC5751255,0.5,-4.916,1812.6
+hybrid-rrf+cross-encoder,q46,lay,hair falling out a few months after having a baby,1.0,EUROPEPMC:PMC7320655,1.0,0.807,1307.5
+hybrid-rrf+cross-encoder,q47,lay,itchy flaky scalp,1.0,NHS:dandruff,0.5,3.701,1372.5
+hybrid-rrf+cross-encoder,x01,out_of_scope,how to fix a car engine,,NIAMS:alopecia-areata-treatment,,-10.927,731.5
+hybrid-rrf+cross-encoder,x02,out_of_scope,what is the capital of France,,EUROPEPMC:PMC11122068,,-10.683,1205.7
+hybrid-rrf+cross-encoder,x03,out_of_scope,best recipe for chocolate cake,,EUROPEPMC:PMC12010142,,-10.875,1013.2
+hybrid-rrf+cross-encoder,x04,out_of_scope,how do I reset my wifi router,,EUROPEPMC:PMC9470217,,-11.001,1074.6
+hybrid-rrf+cross-encoder,x05,out_of_scope,symptoms of a broken wrist,,NIAMS:alopecia-areata,,-6.449,1413.2
+hybrid-rrf+cross-encoder,x06,out_of_scope,treatment for a heart attack,,EUROPEPMC:PMC11942662,,-5.539,1302.5
+hybrid-rrf+cross-encoder,x07,out_of_scope,what is the stock price of Apple,,EUROPEPMC:PMC12010142,,-11.043,1088.4
