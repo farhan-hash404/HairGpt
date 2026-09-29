@@ -12,6 +12,8 @@ from app.core.audit import record_audit
 from app.core.config import settings
 from app.cv.registry import get_quality_gate
 from app.cv.types import ImageInput
+from pydantic import BaseModel, Field
+
 from app.db.session import get_db
 from app.models.scan import (
     Analysis,
@@ -48,7 +50,7 @@ from app.services.framing import (
     find_reference_session,
     reference_views,
 )
-from app.services.orchestrator import run_analysis
+from app.agents.analysis import pending_confirmation, resume_analysis, run_analysis_graph
 from app.services.storage import make_storage_key, storage
 
 router = APIRouter(prefix="/scans", tags=["scans"])
@@ -63,7 +65,15 @@ _UNVALIDATED_DISCLAIMER = (
 )
 
 
-def _required_views(domain: str) -> list[str]:
+def _required_views(scan: ScanSession | str) -> list[str]:
+    """Views a scan must capture: the full protocol, or the regions chosen for a
+    focused scan."""
+    if isinstance(scan, ScanSession):
+        if scan.focus_views:
+            return list(scan.focus_views)
+        domain = scan.domain
+    else:
+        domain = scan
     return HAIR_VIEWS if domain == "hair" else SKIN_VIEWS
 
 
@@ -88,11 +98,22 @@ def create_scan(body: ScanCreateIn, user: User = Depends(require_analysis_consen
             },
         )
 
-    protocol = body.capture_protocol or ("hair_v1" if body.domain == "hair" else "skin_v1")
+    focus = None
+    if body.focus_views:
+        # A focused scan photographs 1-3 chosen regions instead of all seven
+        # views: realistic for a weekly crown check, and honest about coverage.
+        valid = HAIR_VIEWS if body.domain == "hair" else SKIN_VIEWS
+        focus = list(dict.fromkeys(body.focus_views))
+        if not 1 <= len(focus) <= 3 or any(v not in valid for v in focus):
+            raise HTTPException(422, f"focus_views must be 1-3 of: {', '.join(valid)}")
+    protocol = body.capture_protocol or (
+        f"{body.domain}_focus_v1" if focus else ("hair_v1" if body.domain == "hair" else "skin_v1")
+    )
     s = ScanSession(
         user_id=user.id,
         domain=body.domain,
         capture_protocol=protocol,
+        focus_views=focus,
         device_make=body.device_make,
         lighting_label=body.lighting_label,
         status="capturing",
@@ -101,7 +122,7 @@ def create_scan(body: ScanCreateIn, user: User = Depends(require_analysis_consen
     db.commit()
     db.refresh(s)
     return ScanCreateOut(
-        session_id=s.id, domain=s.domain, required_views=_required_views(s.domain), status=s.status
+        session_id=s.id, domain=s.domain, required_views=_required_views(s), status=s.status
     )
 
 
@@ -132,7 +153,7 @@ def get_capture_reference(
 @router.post("/{session_id}/images/presign", response_model=PresignOut)
 def presign(session_id: uuid.UUID, body: PresignIn, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     s = _get_session(db, user, session_id)
-    if body.view not in _required_views(s.domain):
+    if body.view not in _required_views(s):
         raise HTTPException(422, f"Invalid view '{body.view}' for domain {s.domain}")
     key = make_storage_key(user.id, s.id, body.view)
     # In S3 mode this would be a true presigned PUT URL. In local mode the client
@@ -152,7 +173,7 @@ async def upload_image(
     """Store an image and run the quality gate SYNCHRONOUSLY. Low-quality images
     are stored but flagged and NOT analyzed."""
     s = _get_session(db, user, session_id)
-    if view not in _required_views(s.domain):
+    if view not in _required_views(s):
         raise HTTPException(422, f"Invalid view '{view}' for domain {s.domain}")
 
     data = await file.read()
@@ -191,7 +212,7 @@ async def upload_image(
     q.is_mock = report.is_mock
 
     # Longitudinal framing: compare against the previous completed scan so repeat
-    # captures stay comparable. A mismatch WARNS but never blocks — refusing a
+    # captures stay comparable. A mismatch WARNS but never blocks â€” refusing a
     # scan is worse than accepting a flagged one, and the score gates comparison
     # confidence downstream instead.
     reference = find_reference_session(db, user.id, s.domain, exclude_session_id=s.id)
@@ -259,14 +280,24 @@ def get_image_content(
 def analyze(
     session_id: uuid.UUID,
     body: AnalyzeIn | None = None,
+    interactive: bool = False,
+    background: bool = False,
     user: User = Depends(require_analysis_consent),
     db: Session = Depends(get_db),
 ):
-    """Run the pipeline. An optional self-reported symptom report feeds the
-    deterministic safety engine — several high-severity red flags cannot be
-    detected from images alone, so a user's "yes" is enough to force a referral."""
+    """Run the LangGraph analysis pipeline.
+
+    An optional self-reported symptom report feeds the deterministic safety
+    engine â€” several high-severity red flags cannot be detected from images
+    alone, so a user's "yes" is enough to force a referral.
+
+    ``interactive=true`` enables human-in-the-loop: a low-confidence reading
+    pauses and returns ``{"status": "awaiting_confirmation", ...}``; answer it
+    with ``POST /scans/{id}/analyze/resume``. The default (used by the website)
+    never pauses.
+    """
     s = _get_session(db, user, session_id)
-    required = set(_required_views(s.domain))
+    required = set(_required_views(s))
     passed = {
         img.view
         for img in db.scalars(select(ScanImage).where(ScanImage.session_id == s.id)).all()
@@ -286,8 +317,42 @@ def analyze(
     safety_ctx = build_history_context(db, user.id)
     safety_ctx.update((body or AnalyzeIn()).to_safety_context())
 
-    run_analysis(db, s, safety_ctx)  # synchronous in MVP; a worker in production
-    return {"status": "complete", "session_id": str(s.id)}
+    if background:
+        # Queued on Celery; poll GET /scans/{id}/result (202 until ready). With
+        # no Redis configured the task runs inline and is done on return.
+        from app.worker import analyze_scan
+
+        task = analyze_scan.delay(str(s.id), safety_ctx)
+        return {"status": "queued", "session_id": str(s.id), "task_id": task.id}
+    return run_analysis_graph(db, s, safety_ctx, interactive=interactive)
+
+
+class ResumeIn(BaseModel):
+    decision: str = Field(pattern="^(proceed|retake)$")
+
+
+@router.get("/{session_id}/analyze/pending")
+def analysis_pending(session_id: uuid.UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """What a paused (human-in-the-loop) analysis is waiting on, if anything."""
+    s = _get_session(db, user, session_id)
+    pending = pending_confirmation(db, str(s.id))
+    return {"awaiting_confirmation": pending is not None, **(pending or {})}
+
+
+@router.post("/{session_id}/analyze/resume")
+def analysis_resume(
+    session_id: uuid.UUID,
+    body: ResumeIn,
+    user: User = Depends(require_analysis_consent),
+    db: Session = Depends(get_db),
+):
+    """Answer a paused analysis. Resumes from its checkpoint â€” the computer
+    vision is not re-run."""
+    s = _get_session(db, user, session_id)
+    try:
+        return resume_analysis(db, str(s.id), body.decision)
+    except LookupError:
+        raise HTTPException(status.HTTP_409_CONFLICT, detail={"code": "not_paused"})
 
 
 def _assemble_analysis(db: Session, s: ScanSession) -> AnalysisOut:
@@ -347,7 +412,7 @@ def get_scan(session_id: uuid.UUID, user: User = Depends(get_current_user), db: 
     images = db.scalars(select(ScanImage).where(ScanImage.session_id == s.id)).all()
     return {
         "session": ScanSummaryOut.model_validate(s),
-        "required_views": _required_views(s.domain),
+        "required_views": _required_views(s),
         "images": [
             {
                 "id": str(i.id),
@@ -390,7 +455,7 @@ def doctor_report(session_id: uuid.UUID, user: User = Depends(get_current_user),
         observations.append(payload)
 
     # Self-reported history is often the most clinically useful part of this
-    # report — it is the context no photo can supply, and unlike the CV output
+    # report â€” it is the context no photo can supply, and unlike the CV output
     # its value does not depend on model quality.
     history_row = db.scalar(select(ClinicalHistory).where(ClinicalHistory.user_id == user.id))
     history_payload = None

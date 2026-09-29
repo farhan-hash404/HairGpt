@@ -39,10 +39,11 @@ const BAND_COPY: Record<ConfidenceBand, string> = {
  * firm, hatched where it is provisional. A hatched bar reads as "incomplete"
  * rather than "danger", which is the honest signal.
  */
+/* Ink, not the accent: the accent is green, and green would read as "good". */
 const BAND_FILL: Record<ConfidenceBand, string> = {
-  high: "bg-accent",
-  moderate: "bg-accent/65",
-  low: "bg-accent/45 [background-image:repeating-linear-gradient(135deg,transparent_0_3px,hsl(var(--surface))_3px_5px)]",
+  high: "bg-ink",
+  moderate: "bg-ink/55",
+  low: "bg-ink/40 [background-image:repeating-linear-gradient(135deg,transparent_0_3px,hsl(var(--surface))_3px_5px)]",
 };
 
 export function ConfidenceScale({
@@ -50,6 +51,7 @@ export function ConfidenceScale({
   label,
   size = "default",
   showBand = true,
+  showLabel = true,
   className,
 }: {
   value: number;
@@ -57,6 +59,8 @@ export function ConfidenceScale({
   label?: string;
   size?: "sm" | "default";
   showBand?: boolean;
+  /** Off when the surrounding cell already names the reading. */
+  showLabel?: boolean;
   className?: string;
 }) {
   const v = Math.max(0, Math.min(1, value ?? 0));
@@ -65,8 +69,8 @@ export function ConfidenceScale({
 
   return (
     <div className={cn("min-w-0", className)}>
-      <div className="flex items-baseline justify-between gap-3">
-        <span className="label">Confidence</span>
+      <div className={cn("flex items-baseline gap-3", showLabel ? "justify-between" : "justify-end")}>
+        {showLabel && <span className="label">Confidence</span>}
         <span
           className={cn("readout font-medium", size === "sm" ? "text-xs" : "text-sm")}
           aria-hidden="true"

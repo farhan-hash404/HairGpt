@@ -1,10 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
+import { motion } from "framer-motion";
 import { getToken } from "@/lib/api";
-import { titleize } from "@/lib/utils";
+import { cn, titleize } from "@/lib/utils";
 
 /** Fetch a protected image as an object URL (the API needs a bearer token, so a
  *  plain <img src> cannot be used). */
@@ -39,28 +38,8 @@ function useAuthedImage(sessionId: string | null, view: string | null) {
   return { url, failed };
 }
 
-function Pane({
-  title,
-  caption,
-  children,
-}: {
-  title: string;
-  caption?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <Card className="overflow-hidden">
-      <div className="relative aspect-square bg-surface-sunken">{children}</div>
-      <div className="p-3">
-        <p className="text-sm font-medium">{title}</p>
-        {caption && <p className="mt-0.5 text-[11px] text-ink-soft">{caption}</p>}
-      </div>
-    </Card>
-  );
-}
-
 function Placeholder({ label }: { label: string }) {
-  return <div className="grid h-full place-items-center text-xs text-ink-soft">{label}</div>;
+  return <div className="graph-paper grid h-full place-items-center font-mono text-[11px] text-ink-faint">{label}</div>;
 }
 
 /**
@@ -133,6 +112,45 @@ function DifferenceCanvas({ beforeUrl, afterUrl }: { beforeUrl: string; afterUrl
   return <canvas ref={ref} className="h-full w-full object-cover" aria-label="Difference visualization" />;
 }
 
+type Pane = { id: string; label: string; caption?: string; content: React.ReactNode };
+
+/* The four plates widen on hover or focus: Skiper UI's hover-expand (skiper52)
+   motion, adapted to hold any content rather than only image URLs. */
+function ExpandStrip({ panes }: { panes: Pane[] }) {
+  const [active, setActive] = React.useState(0);
+  return (
+    <div className="hidden h-[23rem] gap-2 md:flex">
+      {panes.map((p, i) => (
+        <motion.figure
+          key={p.id}
+          tabIndex={0}
+          aria-label={p.label}
+          onHoverStart={() => setActive(i)}
+          onFocus={() => setActive(i)}
+          initial={false}
+          animate={{ flexGrow: active === i ? 2.6 : 1 }}
+          transition={{ duration: 0.35, ease: "easeInOut" }}
+          style={{ flexBasis: 0 }}
+          className="relative min-w-0 cursor-pointer overflow-hidden border border-rule bg-surface-sunken outline-offset-2"
+        >
+          <div className="absolute inset-0">{p.content}</div>
+          <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent px-3 pb-2.5 pt-8 text-white">
+            <p className="font-mono text-[11px] uppercase tracking-[0.12em]">
+              <span className="text-white/60">{String(i + 1).padStart(2, "0")} </span>
+              {p.label}
+            </p>
+            {p.caption && (
+              <p className={cn("mt-0.5 truncate text-[11px] text-white/75 transition-opacity", active === i ? "opacity-100" : "opacity-0")}>
+                {p.caption}
+              </p>
+            )}
+          </figcaption>
+        </motion.figure>
+      ))}
+    </div>
+  );
+}
+
 export function ComparePanes({
   sessionBefore,
   sessionAfter,
@@ -150,60 +168,77 @@ export function ComparePanes({
 
   const ready = before.url && after.url;
 
+  const panes: Pane[] = [
+    {
+      id: "before",
+      label: "Before",
+      content: before.url ? (
+        <img src={before.url} alt="Before scan" className="h-full w-full object-cover" />
+      ) : (
+        <Placeholder label={before.failed ? "image unavailable" : "loading…"} />
+      ),
+    },
+    {
+      id: "after",
+      label: "After",
+      content: after.url ? (
+        <img src={after.url} alt="After scan" className="h-full w-full object-cover" />
+      ) : (
+        <Placeholder label={after.failed ? "image unavailable" : "loading…"} />
+      ),
+    },
+    {
+      id: "overlay",
+      label: "Aligned overlay",
+      caption: `alignment quality ${Math.round(alignmentQuality * 100)}%`,
+      content: ready ? (
+        <>
+          <img src={before.url!} alt="" className="absolute inset-0 h-full w-full object-cover" />
+          <img
+            src={after.url!}
+            alt="Aligned overlay of both scans"
+            className="absolute inset-0 h-full w-full object-cover"
+            style={{ opacity: overlayOpacity }}
+          />
+        </>
+      ) : (
+        <Placeholder label="loading…" />
+      ),
+    },
+    {
+      id: "difference",
+      label: "Difference",
+      caption: "teal = lighter after · amber = darker after",
+      content: ready ? <DifferenceCanvas beforeUrl={before.url!} afterUrl={after.url!} /> : <Placeholder label="loading…" />,
+    },
+  ];
+
   return (
     <div className="space-y-3">
       {view && (
-        <div className="flex flex-wrap items-center gap-2 text-sm text-ink-soft">
-          <Badge variant="neutral">{titleize(view)} view</Badge>
-          <span>the same view is used for both scans</span>
-        </div>
+        <p className="label">
+          <span className="text-ink">{titleize(view)} view</span> · the same view is used for both scans
+        </p>
       )}
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Pane title="Before">
-          {before.url ? (
-            <img src={before.url} alt="Before scan" className="h-full w-full object-cover" />
-          ) : (
-            <Placeholder label={before.failed ? "image unavailable" : "loading…"} />
-          )}
-        </Pane>
-
-        <Pane title="After">
-          {after.url ? (
-            <img src={after.url} alt="After scan" className="h-full w-full object-cover" />
-          ) : (
-            <Placeholder label={after.failed ? "image unavailable" : "loading…"} />
-          )}
-        </Pane>
-
-        <Pane title="Aligned overlay" caption={`alignment quality ${Math.round(alignmentQuality * 100)}%`}>
-          {ready ? (
-            <>
-              <img src={before.url!} alt="" className="absolute inset-0 h-full w-full object-cover" />
-              <img
-                src={after.url!}
-                alt="Aligned overlay of both scans"
-                className="absolute inset-0 h-full w-full object-cover"
-                style={{ opacity: overlayOpacity }}
-              />
-            </>
-          ) : (
-            <Placeholder label="loading…" />
-          )}
-        </Pane>
-
-        <Pane title="Difference" caption="teal = lighter after · amber = darker after">
-          {ready ? (
-            <DifferenceCanvas beforeUrl={before.url!} afterUrl={after.url!} />
-          ) : (
-            <Placeholder label="loading…" />
-          )}
-        </Pane>
+      <div className="crop-marks">
+        <ExpandStrip panes={panes} />
+        <div className="grid grid-cols-2 gap-2 md:hidden">
+          {panes.map((p, i) => (
+            <figure key={p.id}>
+              <div className="relative aspect-square overflow-hidden border border-rule bg-surface-sunken">{p.content}</div>
+              <figcaption className="caption mt-1.5">
+                {String(i + 1).padStart(2, "0")} · {p.label}
+                {p.caption ? ` · ${p.caption}` : ""}
+              </figcaption>
+            </figure>
+          ))}
+        </div>
       </div>
 
       {ready && (
-        <label className="flex flex-wrap items-center gap-3 text-sm">
-          <span className="font-medium">Overlay blend</span>
+        <label className="flex flex-wrap items-center gap-3 pt-1 text-sm">
+          <span className="label">Overlay blend</span>
           <input
             type="range"
             min={0}
@@ -211,18 +246,18 @@ export function ComparePanes({
             step={0.01}
             value={overlayOpacity}
             onChange={(e) => setOverlayOpacity(Number(e.target.value))}
-            className="w-56 accent-[hsl(var(--accent))]"
+            className="w-56 accent-[hsl(var(--ink))]"
             aria-label="Blend between before and after"
           />
-          <span className="tabular-nums text-ink-soft">
+          <span className="readout text-xs text-ink-soft">
             {Math.round((1 - overlayOpacity) * 100)}% before / {Math.round(overlayOpacity * 100)}% after
           </span>
         </label>
       )}
 
-      <p className="text-[11px] text-ink-soft">
-        The difference map highlights where the two photos differ. Lighting, pose and camera changes also produce
-        differences — it is a visual aid, not a measurement, and it cannot show that a treatment worked.
+      <p className="caption max-w-[80ch]">
+        The difference map shows where the two photos differ. Lighting, pose and camera changes also produce
+        differences: it is a visual aid, not a measurement, and it cannot show that a treatment worked.
       </p>
     </div>
   );

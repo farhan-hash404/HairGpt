@@ -11,7 +11,11 @@ from pathlib import Path
 # maths) fast and offline. Retrieval QUALITY is measured by the benchmark in
 # scripts/eval_rag.py against the full corpus and real embeddings.
 _FIXTURES = Path(__file__).parent / "fixtures"
+_SCRATCH = tempfile.mkdtemp(prefix="hairgpt-tests-")
 os.environ.update({
+    # Never the developer's database, even for code that opens its own session.
+    "DATABASE_URL": f"sqlite:///{_SCRATCH}/unit.db",
+    "STORAGE_LOCAL_DIR": f"{_SCRATCH}/storage",
     "CORPUS_FILE": str(_FIXTURES / "corpus_subset.jsonl"),  # 14 real documents
     "CHROMA_DIR": ":memory:",
     "EMBEDDING_PROVIDER": "hashing",
@@ -21,10 +25,22 @@ os.environ.update({
     "RAG_MIN_RELEVANCE": "0.05",
     "WARM_CACHES": "false",
     "LLM_PROVIDER": "none",
+    "CHECKPOINT_DB": ":memory:",
 })
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
+
+
+@pytest.fixture(autouse=True)
+def _isolated_cache():
+    """The answer cache and rate-limit counters are module-level; don't let one
+    test's cached answer satisfy another's question."""
+    from app.core.cache import reset_cache
+
+    reset_cache()
+    yield
+    reset_cache()
 
 
 @pytest.fixture

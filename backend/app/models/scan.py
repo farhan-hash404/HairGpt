@@ -27,6 +27,8 @@ class ScanSession(Base):
     domain: Mapped[str] = mapped_column(String(8), nullable=False)  # hair | skin
     status: Mapped[str] = mapped_column(String(16), default="capturing")
     capture_protocol: Mapped[str] = mapped_column(String(32), default="hair_v1")
+    # Regions chosen for a focused scan (1-3 views); NULL for the full protocol.
+    focus_views: Mapped[list | None] = mapped_column(JSONType, nullable=True)
     device_make: Mapped[str | None] = mapped_column(String(64), nullable=True)  # fairness metadata
     lighting_label: Mapped[str | None] = mapped_column(String(24), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)

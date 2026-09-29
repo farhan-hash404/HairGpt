@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
    accent so severity never competes with brand emphasis; `flag` is dashed to
    read as a caveat rather than a status. */
 const badgeVariants = cva(
-  "inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-[0.07em]",
+  "inline-flex items-center gap-1 rounded-sm border px-1.5 py-[3px] font-mono text-[10px] font-medium uppercase leading-none tracking-[0.1em]",
   {
     variants: {
       variant: {

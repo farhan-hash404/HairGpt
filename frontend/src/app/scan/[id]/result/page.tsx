@@ -3,15 +3,17 @@
 import * as React from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { FileText, Stethoscope } from "lucide-react";
+import { FileText, Layers, LineChart, Stethoscope } from "lucide-react";
 import { api, modelTrustLabel, type Analysis, type Observation } from "@/lib/api";
 import { AuthGate } from "@/components/auth-gate";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { buttonVariants } from "@/components/ui/button";
 import { ConfidenceChip, ConfidenceScale } from "@/components/confidence";
+import { MetricTerm } from "@/components/metric-term";
+import { PageHeader } from "@/components/page-header";
 import { SafetyBanner } from "@/components/safety-banner";
 import { WhyEvidence } from "@/components/why-evidence";
+import { ReticleMark } from "@/components/wordmark";
 import { titleize } from "@/lib/utils";
 
 export default function ResultPage() {
@@ -98,149 +100,173 @@ function Result() {
     api.result(id).then(setData).catch((e) => setError(e?.message ?? "Could not load result"));
   }, [id]);
 
-  if (error) return <p className="text-alert">{error}</p>;
-  if (!data) return <p className="text-ink-soft">Loading your analysis…</p>;
+  if (error) {
+    return <p className="border-l-2 border-alert bg-alert-wash px-4 py-3 text-sm text-alert">{error}</p>;
+  }
+  if (!data) {
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center gap-3 text-ink-soft">
+        <ReticleMark className="h-6 w-6 animate-spin text-ink [animation-duration:2.4s]" />
+        <p className="label">Loading your analysis…</p>
+      </div>
+    );
+  }
 
   const referred = data.safety_verdict?.verdict === "refer";
+  const groups = groupObservations(data.observations);
+  const notes = [...(data.explanation?.limitations ?? []), ...data.disclaimers];
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-ink-soft">
-            {data.domain === "hair" ? "Hair & scalp analysis" : "Skin analysis"}
-          </p>
-          <h1 className="mt-1 text-2xl font-normal">Your results</h1>
-          <p className="mt-1 text-sm text-ink-soft">{data.explanation?.summary}</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <ConfidenceScale value={data.overall_confidence} label="overall" className="w-40" />
-          <div className="text-sm">
-            <p className="font-medium">Overall confidence</p>
-            <p className="text-ink-soft">
-              {data.overall_confidence < 0.5 ? "low — interpret cautiously" : "moderate"}
-            </p>
+    <div className="mx-auto max-w-5xl animate-rise">
+      <PageHeader
+        eyebrow={data.domain === "hair" ? "Result · hair & scalp" : "Result · skin"}
+        title={
+          <>
+            What the photographs <span className="italic text-ink-soft">appear</span> to show.
+          </>
+        }
+        dek="Observations, each with its own confidence. Nothing here is a diagnosis."
+        actions={
+          <div className="w-56">
+            <ConfidenceScale value={data.overall_confidence} label="overall" />
           </div>
-        </div>
-      </header>
+        }
+      />
 
       {data.safety_verdict && <SafetyBanner verdict={data.safety_verdict} />}
 
       {data.skin_appearance_index !== null && data.skin_appearance_index !== undefined && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Skin Appearance Index</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="readout-lg">{data.skin_appearance_index}</p>
-            <p className="mt-1 text-sm text-ink-soft">
-              A transparent composite of apparent attributes (0–100). Not a clinical score.
-            </p>
-          </CardContent>
-        </Card>
+        <section className="panel mt-8 p-5">
+          <p className="label">Skin appearance index</p>
+          <p className="readout-lg mt-2">{data.skin_appearance_index}</p>
+          <p className="mt-1 text-sm text-ink-soft">
+            A transparent composite of apparent attributes (0–100). Not a clinical score.
+          </p>
+        </section>
       )}
 
-      {/* Observations — aggregated across views, with the per-view spread shown
-          so a single number never hides disagreement between images. */}
-      <section>
-        <h2 className="mb-3 text-lg font-medium">What the images appear to show</h2>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {groupObservations(data.observations).map((g) => (
-            <Card key={g.kind} className="p-4">
-              <div className="flex items-start justify-between gap-3">
+      <section className="mt-12">
+        <h2 className="flex items-baseline gap-3 text-2xl">
+          <span className="readout text-sm text-ink-faint">A.</span>
+          Findings
+        </h2>
+        <p className="mt-1 text-sm text-ink-soft">
+          Aggregated across views. The range shows where views disagree; confidence is the weakest view&apos;s.
+        </p>
+
+        <div className="mt-5 border-t border-ink">
+          <div className="hidden grid-cols-[1.3fr_1fr_1fr_0.9fr] gap-4 border-b border-rule py-2 md:grid">
+            {["Finding", "Reading", "Across views", "Confidence"].map((h) => (
+              <span key={h} className="label">
+                {h}
+              </span>
+            ))}
+          </div>
+          {groups.map((g) => {
+            const trust = modelTrustLabel({ is_mock: g.isMock, validated: g.validated });
+            return (
+              <div
+                key={g.kind}
+                className="grid gap-x-4 gap-y-2 border-b border-rule py-4 md:grid-cols-[1.3fr_1fr_1fr_0.9fr] md:items-baseline"
+              >
                 <div className="min-w-0">
-                  <p className="font-medium">{titleize(g.kind)}</p>
-                  <p className="mt-0.5 text-sm text-ink-soft">{g.display}</p>
-                  {g.count > 1 && (
-                    <p className="mt-0.5 text-xs text-ink-soft">
-                      across {g.count} views
-                      {g.spread !== null && ` · range ${g.min?.toFixed(3)}–${g.max?.toFixed(3)}`}
-                    </p>
-                  )}
-                  <div className="mt-2 flex flex-wrap gap-1.5">
+                  <p className="font-display text-lg leading-tight">
+                    <MetricTerm kind={g.kind} />
+                  </p>
+                  <div className="mt-1.5 flex flex-wrap gap-1.5">
                     <Badge variant={g.observationType === "visual_observation" ? "neutral" : "default"}>
                       {g.observationType === "visual_observation" ? "visual observation" : "AI inference"}
                     </Badge>
-                    {(() => {
-                      const trust = modelTrustLabel({ is_mock: g.isMock, validated: g.validated });
-                      return trust ? <Badge variant={trust.variant}>{trust.text}</Badge> : null;
-                    })()}
+                    {trust && <Badge variant={trust.variant}>{trust.text}</Badge>}
                   </div>
-                  <p className="mt-2 text-xs text-ink-soft">{g.basis}</p>
                 </div>
-                <ConfidenceChip value={g.confidence} />
+                <p className="readout text-[0.95rem] text-ink">{g.display}</p>
+                <p className="caption">
+                  {g.count > 1 ? `${g.count} views` : "1 view"}
+                  {g.spread !== null && g.count > 1 && (
+                    <>
+                      <br />
+                      range {g.min?.toFixed(3)}–{g.max?.toFixed(3)}
+                    </>
+                  )}
+                </p>
+                <div>
+                  <ConfidenceChip value={g.confidence} />
+                  <p className="caption mt-1 md:max-w-[16rem]">{g.basis}</p>
+                </div>
               </div>
-            </Card>
-          ))}
+            );
+          })}
         </div>
       </section>
 
-      {/* Recommendations — suppressed entirely when the safety layer says refer */}
-      <section>
-        <h2 className="mb-3 text-lg font-medium">
+      <section className="mt-12">
+        <h2 className="flex items-baseline gap-3 text-2xl">
+          <span className="readout text-sm text-ink-faint">B.</span>
           {referred ? "Next step" : "Suggested next steps"}
         </h2>
-        <div className="space-y-3">
+        <ol className="mt-5 border-t border-ink">
           {data.recommendations.map((r, i) => (
-            <Card key={i}>
-              <CardContent className="pt-5">
+            <li key={i} className="grid gap-x-5 border-b border-rule py-6 md:grid-cols-[3rem_1fr]">
+              <span className="readout pt-1 text-sm text-ink-faint">{String(i + 1).padStart(2, "0")}</span>
+              <div className="min-w-0">
                 <div className="mb-2 flex flex-wrap items-center gap-2">
-                  <Badge variant={r.type === "referral" ? "alert" : r.requires_clinician ? "caution" : "default"}>
+                  <Badge variant={r.type === "referral" ? "alert" : r.requires_clinician ? "caution" : "neutral"}>
                     {titleize(r.type)}
                   </Badge>
                   {r.requires_clinician && (
                     <span className="inline-flex items-center gap-1 text-xs text-ink-soft">
-                      <Stethoscope className="h-3 w-3" /> clinician involvement recommended
+                      <Stethoscope className="h-3 w-3" /> involve a clinician
                     </span>
                   )}
                 </div>
-                <p className="font-medium">{r.title}</p>
-                <p className="mt-1 text-sm text-ink-soft">{r.body}</p>
-                <div className="mt-3">
-                  <WhyEvidence
-                    explain={{
-                      observation: r.title,
-                      reasoning: r.body,
-                      confidence: {
-                        value: r.confidence,
-                        basis: "evidence-gated recommendation",
-                        method: "rec_v1",
-                      },
-                      limitations: data.explanation?.limitations,
-                    }}
-                    evidence={r.evidence}
-                  />
-                </div>
-              </CardContent>
-            </Card>
+                <p className="font-display text-xl leading-snug">{r.title}</p>
+                <p className="mt-1.5 max-w-[68ch] text-sm leading-relaxed text-ink-soft">{r.body}</p>
+                <WhyEvidence
+                  className="mt-4"
+                  explain={{
+                    observation: r.title,
+                    reasoning: r.body,
+                    confidence: {
+                      value: r.confidence,
+                      basis: "evidence-gated recommendation",
+                      method: "rec_v1",
+                    },
+                    limitations: data.explanation?.limitations,
+                  }}
+                  evidence={r.evidence}
+                />
+              </div>
+            </li>
           ))}
-        </div>
+        </ol>
       </section>
 
-      <div className="flex flex-wrap gap-3">
-        <Link href={`/report/${data.session_id}`}>
-          <Button variant="outline">
-            <FileText className="h-4 w-4" /> Doctor report
-          </Button>
+      <div className="mt-10 flex flex-wrap gap-2">
+        <Link href={`/report/${data.session_id}`} className={buttonVariants()}>
+          <FileText className="h-4 w-4" strokeWidth={1.75} /> Doctor report
         </Link>
-        <Link href="/compare">
-          <Button variant="outline">Compare with previous scan</Button>
+        <Link href="/compare" className={buttonVariants({ variant: "outline" })}>
+          <Layers className="h-4 w-4" strokeWidth={1.75} /> Compare with a previous scan
         </Link>
-        <Link href="/timeline">
-          <Button variant="outline">Treatment timeline</Button>
+        <Link href="/timeline" className={buttonVariants({ variant: "outline" })}>
+          <LineChart className="h-4 w-4" strokeWidth={1.75} /> Timeline
         </Link>
       </div>
 
-      <Card className="bg-surface-sunken">
-        <CardContent className="pt-5">
-          <p className="mb-2 text-sm font-medium">Limitations &amp; disclaimers</p>
-          <ul className="space-y-1 text-xs text-ink-soft">
-            {[...(data.explanation?.limitations ?? []), ...data.disclaimers].map((d, i) => (
-              <li key={i}>• {d}</li>
+      {notes.length > 0 && (
+        <section className="mt-14 border-t border-rule pt-5">
+          <p className="label mb-3">Notes &amp; limitations</p>
+          <ol className="grid gap-x-10 gap-y-2 md:grid-cols-2">
+            {notes.map((d, i) => (
+              <li key={i} className="grid grid-cols-[1.5rem_1fr] text-xs leading-relaxed text-ink-soft">
+                <span className="readout text-ink-faint">{i + 1}</span>
+                <span>{d}</span>
+              </li>
             ))}
-          </ul>
-        </CardContent>
-      </Card>
+          </ol>
+        </section>
+      )}
     </div>
   );
 }

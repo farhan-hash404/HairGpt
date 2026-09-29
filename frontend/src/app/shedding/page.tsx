@@ -4,10 +4,10 @@ import * as React from "react";
 import { Check, Minus, TrendingDown, TrendingUp } from "lucide-react";
 import { api, type SheddingEntry, type SheddingTrend } from "@/lib/api";
 import { AuthGate } from "@/components/auth-gate";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { titleize } from "@/lib/utils";
+import { PageHeader } from "@/components/page-header";
+import { Readout } from "@/components/readout";
+import { cn, titleize } from "@/lib/utils";
 
 export default function SheddingPage() {
   return (
@@ -32,6 +32,43 @@ const BUCKETS = [
   { value: "heavy", label: "A lot" },
   { value: "very_heavy", label: "Alarming" },
 ];
+
+/** Connected switches, like the selector on an instrument. */
+function Switches({
+  options,
+  value,
+  onChange,
+  label,
+}: {
+  options: { value: string; label: string }[];
+  value: string | null;
+  onChange: (v: string) => void;
+  label: string;
+}) {
+  return (
+    <div role="radiogroup" aria-label={label} className="inline-flex flex-wrap border border-rule-strong">
+      {options.map((o, i) => {
+        const active = value === o.value;
+        return (
+          <button
+            key={o.value}
+            type="button"
+            role="radio"
+            aria-checked={active}
+            onClick={() => onChange(o.value)}
+            className={cn(
+              "px-3.5 py-2 text-sm transition-colors",
+              i > 0 && "border-l border-rule-strong",
+              active ? "bg-ink font-medium text-ground" : "bg-surface text-ink-soft hover:bg-surface-sunken hover:text-ink"
+            )}
+          >
+            {o.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 function Shedding() {
   const [entries, setEntries] = React.useState<SheddingEntry[]>([]);
@@ -73,129 +110,101 @@ function Shedding() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <header>
-        <h1 className="text-2xl font-normal">Shedding log</h1>
-        <p className="mt-1 max-w-2xl text-sm text-ink-soft">
-          You&apos;ll notice shedding long before a photo shows anything. Logging it takes a few seconds and gives your
-          timeline an early signal — and your clinician something concrete.
-        </p>
-      </header>
+    <div className="mx-auto max-w-4xl animate-rise">
+      <PageHeader
+        index="Nº 03"
+        eyebrow="Shedding log"
+        title={
+          <>
+            What the <span className="marker">brush</span> noticed.
+          </>
+        }
+        dek="You'll notice shedding long before a photograph shows anything. A few seconds a day gives your timeline an early signal, and your clinician something concrete."
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Log today</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <section className="crop-marks">
+        <div className="space-y-6 border border-rule bg-surface p-5 sm:p-7">
+          <p className="label">Today&apos;s entry</p>
           <div>
-            <p className="mb-2 text-sm font-medium">When did you notice it?</p>
-            <div className="flex flex-wrap gap-2">
-              {CONTEXTS.map((c) => (
-                <button
-                  key={c.value}
-                  onClick={() => setContext(c.value)}
-                  className={`rounded border px-3 py-1.5 text-sm transition-colors ${
-                    context === c.value
-                      ? "border-accent bg-accent-wash text-accent"
-                      : "text-ink-soft hover:bg-surface-sunken"
-                  }`}
-                >
-                  {c.label}
-                </button>
-              ))}
-            </div>
-            <p className="mt-1.5 text-xs text-ink-soft">
-              Shedding is naturally much higher on wash days, so we only ever compare like with like.
-            </p>
+            <p className="mb-2.5 font-display text-lg">When did you notice it?</p>
+            <Switches label="Context" options={CONTEXTS} value={context} onChange={setContext} />
+            <p className="caption mt-2">Wash days shed far more, so only like is ever compared with like.</p>
           </div>
 
           <div>
-            <p className="mb-2 text-sm font-medium">How much?</p>
-            <div className="flex flex-wrap gap-2">
-              {BUCKETS.map((b) => (
-                <button
-                  key={b.value}
-                  onClick={() => setBucket(b.value)}
-                  className={`rounded border px-3 py-1.5 text-sm transition-colors ${
-                    bucket === b.value
-                      ? "border-accent bg-accent-wash text-accent"
-                      : "text-ink-soft hover:bg-surface-sunken"
-                  }`}
-                >
-                  {b.label}
-                </button>
-              ))}
-            </div>
+            <p className="mb-2.5 font-display text-lg">How much?</p>
+            <Switches label="Amount" options={BUCKETS} value={bucket} onChange={setBucket} />
           </div>
 
-          <label className="block text-sm">
-            <span className="mb-1 block font-medium">Or an exact count, if you counted</span>
+          <label className="block">
+            <span className="mb-2 block font-display text-lg">
+              Or an exact count <span className="text-base italic text-ink-faint">(if you counted)</span>
+            </span>
             <input
               type="number"
               min={0}
               value={count}
               onChange={(e) => setCount(e.target.value)}
               placeholder="optional"
-              className="w-40 rounded border bg-surface px-3 py-2"
+              className="readout w-40 rounded border border-rule-strong bg-surface px-3.5 py-2.5 text-base placeholder:font-sans placeholder:text-ink-faint focus:border-ink focus:outline-none focus:ring-2 focus:ring-marker/70"
             />
           </label>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 border-t border-rule pt-5">
             <Button onClick={submit} disabled={busy || (!bucket && !count)}>
               {busy ? "Saving…" : "Log it"}
             </Button>
             {saved && (
-              <span className="flex items-center gap-1.5 text-sm text-accent">
-                <Check className="h-4 w-4" /> Logged
+              <span className="marker inline-flex items-center gap-1.5 text-sm font-medium text-[hsl(30_12%_10%)]" role="status">
+                <Check className="h-4 w-4" strokeWidth={2.5} /> Logged
               </span>
             )}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </section>
 
-      {trend && <TrendCard trend={trend} entries={entries} />}
+      {trend && <TrendSection trend={trend} entries={entries} />}
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Recent entries</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {entries.length === 0 ? (
-            <p className="text-sm text-ink-soft">Nothing logged yet.</p>
-          ) : (
-            <>
-              <ul className="divide-y">
-                {[...entries]
-                  .reverse()
-                  .slice(0, showAll ? undefined : 12)
-                  .map((e) => (
-                    <li key={e.id} className="flex items-center justify-between py-2.5 text-sm">
-                      <span>{e.date ? new Date(e.date).toLocaleDateString() : "—"}</span>
-                      <span className="flex items-center gap-2">
-                        <Badge variant="neutral">{titleize(e.context)}</Badge>
-                        <span className="tabular-nums text-ink-soft">
-                          {e.count !== null ? `${e.count} hairs` : e.bucket ? titleize(e.bucket) : "—"}
-                        </span>
-                      </span>
-                    </li>
-                  ))}
-              </ul>
-              {entries.length > 12 && (
-                <Button variant="ghost" size="sm" className="mt-3" onClick={() => setShowAll((s) => !s)}>
-                  {showAll ? "Show less" : `Show all ${entries.length} entries`}
-                </Button>
-              )}
-            </>
-          )}
-        </CardContent>
-      </Card>
+      <section className="mt-14">
+        <h2 className="mb-4 flex items-baseline gap-3 text-2xl">
+          <span className="readout text-sm text-ink-faint">B.</span>
+          Register
+        </h2>
+        {entries.length === 0 ? (
+          <p className="border-y border-rule py-5 text-sm text-ink-soft">Nothing logged yet.</p>
+        ) : (
+          <>
+            <ul className="border-t border-ink">
+              {[...entries]
+                .reverse()
+                .slice(0, showAll ? undefined : 12)
+                .map((e) => (
+                  <li key={e.id} className="grid grid-cols-[8rem_1fr_auto] items-baseline gap-4 border-b border-rule py-3 text-sm">
+                    <span className="readout text-ink-soft">
+                      {e.date ? new Date(e.date).toLocaleDateString(undefined, { day: "2-digit", month: "short" }) : "—"}
+                    </span>
+                    <span className="label">{titleize(e.context)}</span>
+                    <span className="readout">
+                      {e.count !== null ? `${e.count} hairs` : e.bucket ? titleize(e.bucket) : "—"}
+                    </span>
+                  </li>
+                ))}
+            </ul>
+            {entries.length > 12 && (
+              <Button variant="ghost" size="sm" className="mt-3" onClick={() => setShowAll((s) => !s)}>
+                {showAll ? "Show less" : `Show all ${entries.length} entries`}
+              </Button>
+            )}
+          </>
+        )}
+      </section>
     </div>
   );
 }
 
-/** One line per context, because wash-day and brush-day counts live on
+/** One trace per context, because wash-day and brush-day counts live on
  *  completely different scales and must never share an axis. */
-function ContextChart({ entries, context }: { entries: SheddingEntry[]; context: string }) {
+function ContextTrace({ entries, context }: { entries: SheddingEntry[]; context: string }) {
   const points = entries
     .filter((e) => e.context === context && e.count !== null)
     .map((e) => ({ date: e.date!, value: e.count! }));
@@ -213,62 +222,68 @@ function ContextChart({ entries, context }: { entries: SheddingEntry[]; context:
   const inset = 6;
   const x = (i: number) => inset + (i * (w - inset * 2)) / (points.length - 1);
   const y = (v: number) => h - inset - ((v - lo) / (hi - lo || 1)) * (h - inset * 2);
-  const path = points.map((p, i) => `${i === 0 ? "M" : "L"} ${x(i)} ${y(p.value)}`).join(" ");
+  const path = points.map((p, i) => `${i === 0 ? "M" : "L"} ${x(i).toFixed(1)} ${y(p.value).toFixed(1)}`).join(" ");
 
   return (
-    <div>
-      <div className="mb-1 flex items-baseline justify-between text-xs">
-        <span className="font-medium">{titleize(context)} days</span>
-        <span className="tabular-nums text-ink-soft">
+    <figure>
+      <div className="graph-paper border border-rule bg-surface px-2 py-2">
+        <svg viewBox={`0 0 ${w} ${h}`} className="h-16 w-full" role="img" aria-label={`${context} shedding over time`}>
+          <path d={path} fill="none" className="stroke-ink" strokeWidth={1.5} strokeLinejoin="round" />
+        </svg>
+      </div>
+      <figcaption className="caption mt-1.5 flex justify-between">
+        <span>{titleize(context)} days</span>
+        <span>
           {min}–{max} hairs
         </span>
-      </div>
-      <svg viewBox={`0 0 ${w} ${h}`} className="h-16 w-full" role="img" aria-label={`${context} shedding over time`}>
-        <path d={path} fill="none" stroke="hsl(var(--accent))" strokeWidth={2} strokeLinecap="round" />
-      </svg>
-    </div>
+      </figcaption>
+    </figure>
   );
 }
 
-function TrendCard({ trend, entries }: { trend: SheddingTrend; entries: SheddingEntry[] }) {
+function TrendSection({ trend, entries }: { trend: SheddingTrend; entries: SheddingEntry[] }) {
   const config = {
-    increasing: { icon: TrendingUp, tone: "text-caution", label: "Appears to be increasing" },
-    decreasing: { icon: TrendingDown, tone: "text-accent", label: "Appears to be decreasing" },
-    stable: { icon: Minus, tone: "text-ink-soft", label: "No detectable change" },
-    insufficient_data: { icon: Minus, tone: "text-ink-soft", label: "Not enough data yet" },
+    increasing: { icon: TrendingUp, tone: "text-caution", label: "Appears to be increasing." },
+    decreasing: { icon: TrendingDown, tone: "text-ink", label: "Appears to be easing." },
+    stable: { icon: Minus, tone: "text-ink", label: "No detectable change." },
+    insufficient_data: { icon: Minus, tone: "text-ink-soft", label: "Not enough entries yet." },
   }[trend.trend];
   const Icon = config.icon;
+  const contexts = Object.keys(trend.average_by_context);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
-          <Icon className={`h-4 w-4 ${config.tone}`} />
+    <section className="mt-14">
+      <h2 className="mb-4 flex items-baseline gap-3 text-2xl">
+        <span className="readout text-sm text-ink-faint">A.</span>
+        Trend, last {trend.window_days} days
+      </h2>
+      <div className="border-t border-ink pt-5">
+        <p className={cn("flex items-center gap-2.5 font-display text-3xl", config.tone)}>
+          <Icon className="h-6 w-6 shrink-0" strokeWidth={1.75} />
           {config.label}
-        </CardTitle>
-        <p className="text-sm text-ink-soft">{trend.trend_note}</p>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {Object.keys(trend.average_by_context).length > 0 && (
-          <div className="grid gap-3 sm:grid-cols-2">
+        </p>
+        <p className="mt-2 max-w-[65ch] text-sm leading-relaxed text-ink-soft">{trend.trend_note}</p>
+
+        {contexts.length > 0 && (
+          <div className="mt-6 grid gap-px border border-rule bg-rule sm:grid-cols-2 lg:grid-cols-4">
             {Object.entries(trend.average_by_context).map(([ctx, avg]) => (
-              <div key={ctx} className="rounded border p-3">
-                <p className="text-xs uppercase tracking-wide text-ink-soft">{titleize(ctx)}</p>
-                <p className="mt-0.5 text-xl font-semibold tabular-nums">{avg}</p>
-                <p className="text-xs text-ink-soft">average over {trend.window_days} days</p>
+              <div key={ctx} className="bg-surface p-4">
+                <p className="label">{titleize(ctx)}</p>
+                <Readout value={Number(avg)} digits={Number.isInteger(Number(avg)) ? 0 : 1} className="mt-3 block text-3xl font-medium tracking-[-0.04em]" />
+                <p className="caption mt-1">average hairs per entry</p>
               </div>
             ))}
           </div>
         )}
 
-        <div className="space-y-3">
-          {Object.keys(trend.average_by_context).map((ctx) => (
-            <ContextChart key={ctx} entries={entries} context={ctx} />
+        <div className="mt-6 grid gap-5 sm:grid-cols-2">
+          {contexts.map((ctx) => (
+            <ContextTrace key={ctx} entries={entries} context={ctx} />
           ))}
         </div>
 
-        <p className="text-xs text-ink-soft">{trend.disclaimer}</p>
-      </CardContent>
-    </Card>
+        <p className="caption mt-5 max-w-[80ch]">{trend.disclaimer}</p>
+      </div>
+    </section>
   );
 }

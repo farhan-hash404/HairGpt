@@ -2,26 +2,15 @@
 
 import * as React from "react";
 import Link from "next/link";
-import {
-  Sparkles,
-  TrendingUp,
-  Activity,
-  CheckCircle2,
-  Calendar,
-  Pill,
-  Clock,
-  ArrowRight,
-  Info,
-  ChevronRight,
-  ShieldCheck,
-  Eye,
-  Layers,
-} from "lucide-react";
+import { ArrowUpRight, ChevronRight } from "lucide-react";
 import { api } from "@/lib/api";
 import { AuthGate } from "@/components/auth-gate";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { buttonVariants } from "@/components/ui/button";
+import { ConfidenceChip } from "@/components/confidence";
+import { MetricTerm } from "@/components/metric-term";
+import { PageHeader } from "@/components/page-header";
+import { Readout } from "@/components/readout";
+import { ReticleMark } from "@/components/wordmark";
 import { titleize } from "@/lib/utils";
 
 type Point = {
@@ -31,6 +20,10 @@ type Point = {
   confidence: number;
   is_mock: boolean;
 };
+
+/* Day-to-day differences below this many points are usually lighting, parting
+   or wet hair, not change. */
+const NOISE_POINTS = 2.5;
 
 export default function TimelinePage() {
   return (
@@ -51,397 +44,276 @@ function Timeline() {
 
   if (!data) {
     return (
-      <div className="flex min-h-[40vh] items-center justify-center">
-        <div className="flex items-center gap-3 text-ink-soft">
-          <div className="h-5 w-5 animate-spin rounded-full border-2 border-accent border-t-transparent" />
-          <p className="text-sm font-medium">Loading your hair progress timeline…</p>
-        </div>
+      <div className="flex min-h-[40vh] items-center justify-center gap-3 text-ink-soft">
+        <ReticleMark className="h-6 w-6 animate-spin text-ink [animation-duration:2.4s]" />
+        <p className="label">Loading your timeline…</p>
       </div>
     );
   }
 
   const series: Record<string, Point[]> = data.series ?? {};
-  const hasAny = Object.values(series).some((s) => s.length > 0);
+  const entries = Object.entries(series).filter(([, points]) => points.length > 0);
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8 animate-rise">
-      {/* Page Title & Intro */}
-      <div>
-        <div className="flex items-center gap-2 mb-2">
-          <span className="flex items-center gap-1.5 rounded-full bg-accent-wash px-3 py-1 text-xs font-semibold text-accent">
-            <TrendingUp className="h-3.5 w-3.5" />
-            Longitudinal Progress
-          </span>
-          <span className="text-xs text-ink-faint">Across all standardized scans</span>
-        </div>
-        <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">
-          Your Hair Progress & Timeline
-        </h1>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-soft">
-          Track how your hair density, crown coverage, and hairline stability change over time.
-          All observations are automatically translated from raw sensor metrics into plain-English percentages.
-        </p>
+    <div className="mx-auto max-w-5xl animate-rise">
+      <PageHeader
+        index="Nº 04"
+        eyebrow="Timeline · every standardised scan"
+        title={
+          <>
+            How the readings have <span className="marker">moved</span>.
+          </>
+        }
+        dek="Scans 30 to 60 days apart show real change. Differences under three points are usually light, parting or damp hair."
+      />
 
-        {/* Helpful Explanation Alert */}
-        <div className="mt-4 flex items-start gap-3 rounded-2xl border border-blue-100 bg-blue-50/70 dark:border-blue-900/40 dark:bg-blue-950/20 p-4 text-xs leading-relaxed text-blue-900 dark:text-blue-200">
-          <Info className="h-4 w-4 shrink-0 mt-0.5 text-accent" />
-          <div>
-            <span className="font-semibold">How to read your numbers:</span> Small day-to-day variations (under 3%) are normal and caused by hair parting, wetness, or room lighting. Meaningful trends appear when reviewing scans taken 30 to 60 days apart.
+      {entries.length === 0 ? (
+        <div className="crop-marks mx-auto max-w-xl">
+          <div className="graph-paper border border-rule bg-surface px-6 py-12 text-center">
+            <ReticleMark className="mx-auto h-12 w-12 text-ink-faint" />
+            <p className="mt-4 font-display text-2xl">No completed scans yet.</p>
+            <p className="mx-auto mt-2 max-w-sm text-sm text-ink-soft">
+              Your first standardised capture becomes the baseline every later one is measured against.
+            </p>
+            <Link href="/assessment" className={buttonVariants({ className: "mt-6" })}>
+              Start your first check
+            </Link>
           </div>
         </div>
-      </div>
-
-      {/* Progress Sparkline Cards */}
-      {!hasAny ? (
-        <Card className="rounded-2xl border border-rule p-8 text-center shadow-xs">
-          <CardContent className="space-y-4">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-surface-sunken text-ink-faint">
-              <Calendar className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="text-base font-semibold text-ink">No completed scans recorded yet</p>
-              <p className="mt-1 text-xs text-ink-soft max-w-md mx-auto">
-                Complete your first standardized 7-view scan to record your baseline reading.
-              </p>
-            </div>
-            <Link href="/assessment">
-              <Button size="lg" className="rounded-xl bg-accent text-white hover:bg-accent/90">
-                Start Your First Check
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
       ) : (
-        <div className="space-y-5">
-          {Object.entries(series).map(([kind, points]) =>
-            points.length ? <FriendlyMetricSparkline key={kind} kind={kind} points={points} /> : null
-          )}
+        <div className="space-y-12">
+          {entries.map(([kind, points], i) => (
+            <MetricFigure key={kind} index={i + 1} kind={kind} points={points} />
+          ))}
         </div>
       )}
 
-      {/* Treatment Timeline Lane */}
-      <Card className="rounded-2xl border border-rule shadow-xs overflow-hidden">
-        <CardHeader className="border-b border-rule bg-surface p-5 sm:p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-accent-wash text-accent">
-                <Pill className="h-4 w-4" />
-              </div>
-              <div>
-                <CardTitle className="text-base font-bold text-ink">Active Regimen & Daily Treatments</CardTitle>
-                <p className="text-xs text-ink-faint mt-0.5">Track consistency to correlate with density changes</p>
-              </div>
-            </div>
-            <Link href="/treatments">
-              <Button variant="outline" size="sm" className="rounded-lg text-xs gap-1.5">
-                <span>Manage Regimen</span>
-                <ChevronRight className="h-3 w-3" />
-              </Button>
-            </Link>
-          </div>
-        </CardHeader>
-
-        <CardContent className="p-5 sm:p-6">
-          {data.treatments?.length ? (
-            <div className="grid gap-3 sm:grid-cols-2">
-              {data.treatments.map((t: any) => {
-                const a = adherence.find((x) => x.treatment_id === t.id);
-                const adherencePct = a ? a.adherence_pct : 100;
-
-                return (
-                  <div
-                    key={t.id}
-                    className="flex flex-col justify-between rounded-xl border border-rule bg-surface p-4 shadow-2xs"
-                  >
-                    <div>
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-sm font-semibold text-ink">{t.name}</span>
-                        <span className="rounded-full bg-ok-wash px-2 py-0.5 text-[11px] font-semibold text-ok">
-                          {adherencePct}% consistency
-                        </span>
-                      </div>
-                      <p className="mt-1 text-xs text-ink-soft">
-                        {t.category === "topical" ? "🧴 Topical Application" : "💊 Oral Medication"} • Started {new Date(t.start_date).toLocaleDateString()}
-                      </p>
-                    </div>
-
-                    <div className="mt-3">
-                      <div className="flex items-center justify-between text-[11px] text-ink-faint mb-1">
-                        <span>Adherence Goal</span>
-                        <span className="font-semibold text-ink">{adherencePct}%</span>
-                      </div>
-                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-rule">
-                        <div
-                          className="h-full rounded-full bg-ok transition-all"
-                          style={{ width: `${adherencePct}%` }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="text-center py-6 text-ink-soft">
-              <p className="text-xs">No active treatments logged yet.</p>
-              <Link href="/treatments" className="mt-2 inline-block text-xs font-semibold text-accent hover:underline">
-                + Add your daily vitamins or treatments
-              </Link>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Scan History */}
-      <Card className="rounded-2xl border border-rule shadow-xs overflow-hidden">
-        <CardHeader className="border-b border-rule bg-surface p-5 sm:p-6">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-surface-sunken text-ink-faint">
-              <Calendar className="h-4 w-4" />
-            </div>
-            <div>
-              <CardTitle className="text-base font-bold text-ink">Recorded Scan History</CardTitle>
-              <p className="text-xs text-ink-faint mt-0.5">Click any scan to inspect individual image angles and safety reports</p>
-            </div>
-          </div>
-        </CardHeader>
-
-        <CardContent className="p-0">
-          <div className="divide-y border-rule">
-            {(data.scan_history ?? []).map((s: any) => (
-              <Link
-                key={s.session_id}
-                href={`/scan/${s.session_id}/result`}
-                className="flex items-center justify-between p-4 sm:px-6 hover:bg-surface-sunken transition-colors group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent-wash text-accent font-semibold text-xs">
-                    {new Date(s.date).getDate()}
-                  </div>
+      <section className="mt-16">
+        <div className="mb-4 flex items-end justify-between gap-4">
+          <h2 className="flex items-baseline gap-3 text-2xl">
+            <span className="readout text-sm text-ink-faint">A.</span>
+            Regimen alongside
+          </h2>
+          <Link href="/treatments" className="group inline-flex items-center gap-1 text-sm text-ink-soft hover:text-ink">
+            Manage treatments
+            <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+          </Link>
+        </div>
+        {data.treatments?.length ? (
+          <ul className="border-t border-ink">
+            {data.treatments.map((t: any) => {
+              const a = adherence.find((x) => x.treatment_id === t.id);
+              const pct: number | null = a ? a.adherence_pct : null;
+              return (
+                <li key={t.id} className="grid items-center gap-x-6 gap-y-2 border-b border-rule py-4 sm:grid-cols-[1fr_12rem_7rem]">
                   <div>
-                    <p className="text-sm font-semibold text-ink group-hover:text-accent transition-colors">
-                      {new Date(s.date).toLocaleDateString(undefined, {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      })}{" "}
-                      • 7-Angle Hair Scan
+                    <p className="text-[0.95rem] font-medium">{t.name}</p>
+                    <p className="caption mt-0.5">
+                      {t.category === "topical" ? "Topical" : titleize(t.category ?? "treatment")} · started{" "}
+                      {new Date(t.start_date).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}
                     </p>
-                    <p className="text-xs text-ink-faint mt-0.5">Standardized capture with quality gating</p>
                   </div>
-                </div>
+                  <div className="h-1.5 w-full bg-surface-sunken" aria-hidden="true">
+                    <div className="h-full bg-ink" style={{ width: `${pct ?? 0}%` }} />
+                  </div>
+                  <p className="text-right text-sm">
+                    {pct === null ? (
+                      <span className="text-ink-faint">no logs</span>
+                    ) : (
+                      <>
+                        <Readout value={pct} suffix="%" className="text-base" />
+                        <span className="caption block">last 30 days</span>
+                      </>
+                    )}
+                  </p>
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <p className="border-y border-rule py-6 text-sm text-ink-soft">
+            No treatments logged yet.{" "}
+            <Link href="/treatments" className="text-accent underline decoration-accent/40 underline-offset-4 hover:decoration-accent">
+              Add what you use
+            </Link>{" "}
+            to see it beside your readings.
+          </p>
+        )}
+      </section>
 
-                <div className="flex items-center gap-3">
-                  {s.overall_confidence !== null && (
-                    <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-surface-sunken border border-rule px-2.5 py-0.5 text-xs text-ink-soft">
-                      <ShieldCheck className="h-3 w-3 text-accent" />
-                      {Math.round(s.overall_confidence * 100)}% Confidence
-                    </span>
+      <section className="mt-16">
+        <h2 className="mb-4 flex items-baseline gap-3 text-2xl">
+          <span className="readout text-sm text-ink-faint">B.</span>
+          Scan register
+        </h2>
+        <ul className="border-t border-ink">
+          {(data.scan_history ?? []).map((s: any, i: number) => (
+            <li key={s.session_id}>
+              <Link
+                href={`/scan/${s.session_id}/result`}
+                className="group grid grid-cols-[2.5rem_1fr_auto] items-center gap-4 border-b border-rule py-3.5 transition-colors hover:bg-surface-sunken/70 sm:grid-cols-[2.5rem_11rem_1fr_auto]"
+              >
+                <span className="readout text-xs text-ink-faint">
+                  {String((data.scan_history?.length ?? 0) - i).padStart(2, "0")}
+                </span>
+                <span className="readout text-sm">
+                  {new Date(s.date).toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" })}
+                </span>
+                <span className="hidden text-sm text-ink-soft sm:block">Standardised capture · quality-gated</span>
+                <span className="flex items-center gap-3">
+                  {s.overall_confidence !== null && s.overall_confidence !== undefined && (
+                    <ConfidenceChip value={s.overall_confidence} />
                   )}
-                  <ChevronRight className="h-4 w-4 text-ink-faint group-hover:text-accent group-hover:translate-x-0.5 transition-all" />
-                </div>
+                  <ChevronRight className="h-4 w-4 text-ink-faint transition-transform group-hover:translate-x-0.5 group-hover:text-ink" />
+                </span>
               </Link>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+            </li>
+          ))}
+        </ul>
+      </section>
     </div>
   );
 }
 
-/** Meta information translating clinical metric keys into friendly explanations */
-const METRIC_INFO: Record<
-  string,
-  { title: string; subtitle: string; icon: any; isPercentage: boolean; invertQuality?: boolean; unit: string }
-> = {
+const METRIC_INFO: Record<string, { title: string; subtitle: string; percent: boolean; lowerIsFuller?: boolean }> = {
   scalp_visibility: {
-    title: "Scalp Visibility",
-    subtitle: "How much scalp is showing through your hair. Lower is fuller.",
-    icon: Eye,
-    isPercentage: true,
-    invertQuality: true, // Lower is better!
-    unit: "%",
+    title: "Scalp visibility",
+    subtitle: "How much scalp shows through. Lower means fuller coverage.",
+    percent: true,
+    lowerIsFuller: true,
   },
   apparent_density: {
-    title: "Overall Hair Density",
-    subtitle: "Concentration and volume of strands across your head.",
-    icon: Activity,
-    isPercentage: true,
-    unit: "%",
+    title: "Apparent density",
+    subtitle: "Coverage of strands across the whole scalp.",
+    percent: true,
   },
   crown_density: {
-    title: "Crown & Swirl Density",
-    subtitle: "Apparent fullness at the top-back swirl area.",
-    icon: TrendingUp,
-    isPercentage: true,
-    unit: "%",
+    title: "Crown density",
+    subtitle: "Apparent fullness at the crown swirl.",
+    percent: true,
   },
   hairline_position: {
-    title: "Hairline Stability",
-    subtitle: "Tracks temple and frontal borders for recession signs.",
-    icon: CheckCircle2,
-    isPercentage: false,
-    unit: "cm",
+    title: "Hairline",
+    subtitle: "Where the frontal border sits in the standard view.",
+    percent: false,
   },
 };
 
-/**
- * Friendly Sparkline Component
- * Converts obscure floating points (like 0.296) into clear percentages (like 29.6%),
- * and adds friendly trend summaries ("Steady & Stable", "Improving", etc.).
- */
-function FriendlyMetricSparkline({ kind, points }: { kind: string; points: Point[] }) {
-  const meta = METRIC_INFO[kind] || {
-    title: titleize(kind),
-    subtitle: "Longitudinal tracking observation across your scans.",
-    icon: Activity,
-    isPercentage: false,
-    unit: "",
-  };
+/** One metric, drawn as an instrument trace on graph paper. */
+function MetricFigure({ index, kind, points }: { index: number; kind: string; points: Point[] }) {
+  const meta = METRIC_INFO[kind] ?? { title: titleize(kind), subtitle: "Tracked across your scans.", percent: false };
+  const numeric = points.filter((p) => p.value !== null);
+  const first = numeric[0];
+  const last = numeric[numeric.length - 1] ?? points[points.length - 1];
 
-  const Icon = meta.icon;
+  const scale = meta.percent ? 100 : 1;
+  const delta = first && last && first !== last ? ((last.value ?? 0) - (first.value ?? 0)) * scale : null;
+  const meaningful = delta !== null && Math.abs(delta) > NOISE_POINTS;
 
-  // Format values into friendly numbers
-  const formatVal = (v: number | null) => {
-    if (v === null) return "—";
-    if (meta.isPercentage) {
-      return `${(v * 100).toFixed(1)}%`;
-    }
-    if (kind === "hairline_position") {
-      return "Stable";
-    }
-    return v.toFixed(2);
-  };
-
-  const rawVals = points.map((p) => p.value ?? 0);
-  const dataMin = Math.min(...rawVals);
-  const dataMax = Math.max(...rawVals);
-  const span = dataMax - dataMin;
-  const padDomain = span > 0 ? span * 0.35 : 0.03;
-  const min = dataMin - padDomain;
-  const max = dataMax + padDomain;
-
-  const w = 540;
-  const h = 80;
-  const pad = 12;
-  const x = (i: number) => (points.length === 1 ? w / 2 : pad + (i * (w - pad * 2)) / (points.length - 1));
-  const y = (v: number) => h - pad - ((v - min) / (max - min || 1)) * (h - pad * 2);
-
-  const path = points.map((p, i) => `${i === 0 ? "M" : "L"} ${x(i)} ${y(p.value ?? 0)}`).join(" ");
-  const first = points[0];
-  const last = points[points.length - 1];
-  const delta = (last.value ?? 0) - (first.value ?? 0);
-
-  // Friendly trend interpretation
-  const absDeltaPct = meta.isPercentage ? Math.abs(delta * 100) : Math.abs(delta);
-  const isMeaningful = absDeltaPct > 2.5; // Under 2.5% is normal lighting variation
-
-  let trendBadge = "🟢 Steady & Stable";
-  let trendExplanation = `Readings have remained steady within a normal ±${absDeltaPct.toFixed(1)}% range across your last ${points.length} scans.`;
-
-  if (isMeaningful) {
-    if (meta.invertQuality) {
-      // For scalp visibility, negative delta means LESS scalp is showing = IMPROVEMENT!
-      if (delta < 0) {
-        trendBadge = "🟢 Improving Coverage";
-        trendExplanation = `Visible scalp decreased by ${absDeltaPct.toFixed(1)}%, indicating fuller hair coverage!`;
-      } else {
-        trendBadge = "🟡 Slight Increase in Visibility";
-        trendExplanation = `Visible scalp increased by ${absDeltaPct.toFixed(1)}%. Ensure consistent lighting on your next check.`;
-      }
-    } else {
-      if (delta > 0) {
-        trendBadge = "🟢 Improving Density";
-        trendExplanation = `Density increased by ${absDeltaPct.toFixed(1)}% across your recent scans.`;
-      } else {
-        trendBadge = "🟡 Slight Decrease";
-        trendExplanation = `Density decreased by ${absDeltaPct.toFixed(1)}%. Recommend tracking again in 30 days.`;
-      }
-    }
+  let note: string;
+  if (numeric.length < 2 || delta === null) {
+    note = "One reading so far: this is your baseline.";
+  } else if (!meaningful) {
+    note = `${delta >= 0 ? "+" : "−"}${Math.abs(delta).toFixed(1)} points since the first scan: within day-to-day variation.`;
+  } else if (meta.lowerIsFuller) {
+    note =
+      delta < 0
+        ? `Down ${Math.abs(delta).toFixed(1)} points since the first scan: consistent with fuller coverage, if the lighting matched.`
+        : `Up ${delta.toFixed(1)} points since the first scan. Confirm on the next scan before reading anything into it.`;
+  } else {
+    note = `${delta > 0 ? "Up" : "Down"} ${Math.abs(delta).toFixed(1)} points since the first scan. Confirm on the next scan before reading anything into it.`;
   }
 
+  // Chart geometry
+  const w = 640;
+  const h = 150;
+  const padX = 18;
+  const padY = 18;
+  const vals = numeric.map((p) => p.value as number);
+  const lo = vals.length ? Math.min(...vals) : 0;
+  const hi = vals.length ? Math.max(...vals) : 1;
+  const span = hi - lo;
+  const min = lo - (span > 0 ? span * 0.4 : 0.03);
+  const max = hi + (span > 0 ? span * 0.4 : 0.03);
+  const x = (i: number) => (points.length === 1 ? w / 2 : padX + (i * (w - padX * 2)) / (points.length - 1));
+  const y = (v: number) => h - padY - ((v - min) / (max - min || 1)) * (h - padY * 2);
+  const path = points
+    .map((p, i) => (p.value === null ? null : `${i === 0 ? "M" : "L"} ${x(i).toFixed(1)} ${y(p.value).toFixed(1)}`))
+    .filter(Boolean)
+    .join(" ");
+  const fmt = (v: number) => (meta.percent ? `${(v * 100).toFixed(1)}%` : v.toFixed(2));
+
   return (
-    <Card className="rounded-2xl border border-rule bg-surface p-5 sm:p-6 shadow-xs">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-wash text-accent">
-            <Icon className="h-5 w-5" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-base font-bold text-ink">{meta.title}</h3>
-              <span className="rounded-full bg-surface-sunken border border-rule px-2.5 py-0.5 text-[11px] font-medium text-ink-soft">
-                {trendBadge}
-              </span>
-            </div>
-            <p className="mt-0.5 text-xs text-ink-soft">{meta.subtitle}</p>
-          </div>
+    <figure>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h2 className="text-2xl">
+            <MetricTerm kind={kind} label={meta.title} />
+          </h2>
+          <p className="mt-1 text-sm text-ink-soft">{meta.subtitle}</p>
         </div>
-
-        {/* Current Reading Hero Value */}
         <div className="text-right">
-          <p className="text-xs font-semibold uppercase tracking-wider text-ink-faint">Latest Reading</p>
-          <p className="text-xl font-bold text-accent">
-            {formatVal(last.value)}
-          </p>
-          <p className="text-[11px] text-ink-faint">
-            {(last.confidence * 100).toFixed(0)}% Accuracy Confidence
-          </p>
+          <p className="label">Latest</p>
+          {last.value !== null && meta.percent ? (
+            <Readout value={last.value * 100} digits={1} suffix="%" className="text-3xl font-medium tracking-[-0.04em]" />
+          ) : (
+            <p className="font-display text-3xl">{last.label ? String(last.label).replace(/^apparent /, "").replace(/ \(see limitations\)$/, "") : last.value?.toFixed(2) ?? "—"}</p>
+          )}
+          <div className="mt-1 flex justify-end">
+            <ConfidenceChip value={last.confidence} />
+          </div>
         </div>
       </div>
 
-      {/* Visual Chart Area */}
-      <div className="mt-5 rounded-xl border border-rule/70 bg-surface-sunken/40 p-4">
-        <div className="flex items-center justify-between text-[11px] font-medium text-ink-faint mb-2">
-          <span>Scan Timeline</span>
-          <span>
-            Range: {formatVal(min)} to {formatVal(max)}
-          </span>
-        </div>
-
-        <div className="relative">
-          <svg viewBox={`0 0 ${w} ${h}`} className="h-20 w-full overflow-visible" role="img">
-            {/* Background grid line */}
-            <line x1="0" y1={h / 2} x2={w} y2={h / 2} stroke="currentColor" className="text-rule stroke-[1] stroke-dasharray-[3_3]" />
-
-            {/* Main Sparkline Path */}
-            <path
-              d={path}
-              fill="none"
-              stroke="hsl(var(--accent))"
-              strokeWidth={2.5}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-
-            {/* Individual Data Points */}
-            {points.map((p, i) => (
-              <g key={i}>
-                <circle
-                  cx={x(i)}
-                  cy={y(p.value ?? 0)}
-                  r={5}
-                  className="fill-accent stroke-surface stroke-[2]"
-                />
-              </g>
-            ))}
+      <div className="crop-marks mt-4">
+        <div className="graph-paper border border-rule bg-surface px-2 pb-2 pt-3">
+          <svg viewBox={`0 0 ${w} ${h}`} className="h-36 w-full overflow-visible" role="img" aria-label={`${meta.title} across ${points.length} scans`}>
+            {vals.length > 0 && (
+              <>
+                <line x1={padX} x2={w - padX} y1={y(hi)} y2={y(hi)} className="stroke-rule-strong" strokeDasharray="2 4" />
+                <line x1={padX} x2={w - padX} y1={y(lo)} y2={y(lo)} className="stroke-rule-strong" strokeDasharray="2 4" />
+                <text x={w - padX} y={y(hi) - 5} textAnchor="end" className="fill-ink-faint font-mono text-[10px]">
+                  {fmt(hi)}
+                </text>
+                <text x={w - padX} y={y(lo) + 13} textAnchor="end" className="fill-ink-faint font-mono text-[10px]">
+                  {fmt(lo)}
+                </text>
+              </>
+            )}
+            {path && <path d={path} fill="none" className="stroke-ink" strokeWidth={1.75} strokeLinejoin="round" />}
+            {points.map((p, i) =>
+              p.value === null ? null : (
+                <rect
+                  key={i}
+                  x={x(i) - 3.5}
+                  y={y(p.value) - 3.5}
+                  width={7}
+                  height={7}
+                  className={i === points.length - 1 ? "fill-marker stroke-ink" : "fill-surface stroke-ink"}
+                  strokeWidth={1.5}
+                >
+                  <title>
+                    {new Date(p.date).toLocaleDateString()}: {fmt(p.value)} ({Math.round(p.confidence * 100)}% confidence)
+                  </title>
+                </rect>
+              )
+            )}
           </svg>
-
-          {/* Dates underneath points */}
-          <div className="flex items-center justify-between text-[10px] text-ink-faint mt-2">
+          <div className="flex justify-between px-2 pt-1">
             {points.map((p, i) => (
-              <span key={i} className="tabular-nums">
-                {new Date(p.date).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+              <span key={i} className="readout text-[10px] text-ink-faint">
+                {new Date(p.date).toLocaleDateString(undefined, { day: "numeric", month: "short" })}
               </span>
             ))}
           </div>
         </div>
       </div>
-
-      {/* Friendly Takeaway */}
-      <div className="mt-3 flex items-center justify-between text-xs text-ink-soft border-t border-rule pt-3">
-        <span className="leading-relaxed">{trendExplanation}</span>
-      </div>
-    </Card>
+      <figcaption className="caption mt-2.5 flex flex-wrap justify-between gap-x-6 gap-y-1">
+        <span>
+          Fig. {index} · {meta.title}, {points.length} scan{points.length === 1 ? "" : "s"}
+        </span>
+        <span className="text-ink-soft">{note}</span>
+      </figcaption>
+    </figure>
   );
 }

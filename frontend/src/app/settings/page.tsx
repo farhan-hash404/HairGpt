@@ -1,20 +1,26 @@
 "use client";
 
 import * as React from "react";
-import { Download, LogOut, ShieldCheck, Trash2 } from "lucide-react";
+import { Download, LogOut, Trash2 } from "lucide-react";
 import { api, clearTokens } from "@/lib/api";
 import { AuthGate } from "@/components/auth-gate";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeader } from "@/components/page-header";
+import { ReticleMark } from "@/components/wordmark";
 
 const CONSENT_LABELS: Record<string, string> = {
   storage: "Store my photos securely (encrypted)",
   analysis: "Analyze my photos to produce observations",
   longitudinal: "Keep photos to compare over time",
   clinician_share: "Allow sharing a report with a clinician",
-  research_optin: "Contribute de-identified data to research (optional)",
+  research_optin: "Contribute de-identified data to research",
 };
+
+const GUARANTEES = [
+  "Images are encrypted at rest and never sold or used for advertising.",
+  "No facial recognition or identity matching is performed, ever.",
+  "Access is audit-logged with hashed, minimal metadata; no raw IP addresses.",
+];
 
 export default function SettingsPage() {
   return (
@@ -65,94 +71,109 @@ function Settings() {
     window.location.href = "/";
   }
 
-  if (!me) return <p className="text-ink-soft">Loading…</p>;
+  if (!me) {
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center gap-3 text-ink-soft">
+        <ReticleMark className="h-6 w-6 animate-spin text-ink [animation-duration:2.4s]" />
+        <p className="label">Loading settings…</p>
+      </div>
+    );
+  }
 
   const consentMap: Record<string, boolean> = {};
   me.consents.forEach((c: any) => (consentMap[c.purpose] = c.granted));
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      <header>
-        <h1 className="text-2xl font-normal">Settings &amp; privacy</h1>
-        <p className="mt-1 text-sm text-ink-soft">{me.user.email}</p>
-      </header>
+    <div className="mx-auto max-w-3xl animate-rise">
+      <PageHeader
+        index="Nº 09"
+        eyebrow="Settings & privacy"
+        title={
+          <>
+            Your data, <span className="marker">your call</span>.
+          </>
+        }
+        dek={<>Signed in as <span className="readout not-italic">{me.user.email}</span></>}
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4 text-accent" /> Consent
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {Object.entries(CONSENT_LABELS).map(([purpose, label]) => (
-            <label key={purpose} className="flex items-center justify-between gap-3 rounded border p-3 text-sm">
-              <span>
-                {label}
-                {(purpose === "storage" || purpose === "analysis") && (
-                  <Badge variant="neutral" className="ml-2">required for analysis</Badge>
-                )}
-              </span>
-              <input
-                type="checkbox"
-                disabled={busy}
-                checked={!!consentMap[purpose]}
-                onChange={(e) => toggle(purpose, e.target.checked)}
-                className="h-4 w-4 accent-[hsl(var(--accent))]"
-              />
-            </label>
+      <section>
+        <h2 className="mb-4 flex items-baseline gap-3 text-2xl">
+          <span className="readout text-sm text-ink-faint">A.</span>
+          Consent
+        </h2>
+        <div className="border-t border-ink">
+          {Object.entries(CONSENT_LABELS).map(([purpose, label]) => {
+            const required = purpose === "storage" || purpose === "analysis";
+            return (
+              <label
+                key={purpose}
+                className="flex cursor-pointer items-center gap-4 border-b border-rule py-4 text-[0.95rem] transition-colors hover:bg-surface-sunken/60"
+              >
+                <input
+                  type="checkbox"
+                  disabled={busy}
+                  checked={!!consentMap[purpose]}
+                  onChange={(e) => toggle(purpose, e.target.checked)}
+                  className="ml-1 h-[18px] w-[18px] shrink-0 accent-[hsl(var(--ink))]"
+                />
+                <span className="flex-1">{label}</span>
+                <span className="label mr-1">{required ? "Required for analysis" : "Optional"}</span>
+              </label>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="mt-14">
+        <h2 className="mb-4 flex items-baseline gap-3 text-2xl">
+          <span className="readout text-sm text-ink-faint">B.</span>
+          Your data
+        </h2>
+        <div className="grid gap-4 sm:grid-cols-3">
+          {GUARANTEES.map((g) => (
+            <p key={g} className="border-t border-ink pt-2 text-sm leading-snug text-ink-soft">
+              {g}
+            </p>
           ))}
-        </CardContent>
-      </Card>
+        </div>
+        <div className="mt-6 flex flex-wrap gap-2">
+          <Button variant="outline" onClick={exportData}>
+            <Download className="h-4 w-4" /> Export my data
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={() => {
+              clearTokens();
+              window.location.href = "/";
+            }}
+          >
+            <LogOut className="h-4 w-4" /> Sign out
+          </Button>
+        </div>
+      </section>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Your data</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <ul className="space-y-1 rounded bg-surface-sunken p-3 text-xs text-ink-soft">
-            <li>• Images are encrypted at rest and never sold or used for advertising.</li>
-            <li>• No facial recognition or identity matching is performed, ever.</li>
-            <li>• Access is audit-logged with hashed, minimal metadata (no raw IP addresses).</li>
-          </ul>
-          <div className="flex flex-wrap gap-3">
-            <Button variant="outline" onClick={exportData}>
-              <Download className="h-4 w-4" /> Export my data
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() => {
-                clearTokens();
-                window.location.href = "/";
-              }}
-            >
-              <LogOut className="h-4 w-4" /> Sign out
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="border-alert/40">
-        <CardHeader>
-          <CardTitle className="text-alert">Delete everything</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <p className="text-sm text-ink-soft">
-            Permanently deletes your account, scans, images, observations, and treatments. This cannot be undone. Type{" "}
-            <code className="rounded bg-surface-sunken px-1">DELETE</code> to confirm.
-          </p>
+      <section className="mt-14 border-l-2 border-alert bg-alert-wash px-5 py-5 sm:px-6">
+        <h2 className="flex items-baseline gap-3 text-2xl text-alert">
+          <span className="readout text-sm">C.</span>
+          Delete everything
+        </h2>
+        <p className="mt-2 max-w-[62ch] text-sm leading-relaxed text-ink-soft">
+          Permanently deletes your account, scans, images, observations and treatments. This cannot be undone. Type{" "}
+          <code className="readout rounded-sm border border-rule-strong bg-surface px-1">DELETE</code> to confirm.
+        </p>
+        <div className="mt-4 flex flex-wrap items-center gap-3">
           <input
             value={confirmText}
             onChange={(e) => setConfirmText(e.target.value)}
-            className="w-40 rounded border bg-surface px-3 py-2 text-sm"
+            aria-label="Type DELETE to confirm"
+            className="readout w-40 rounded border border-rule-strong bg-surface px-3.5 py-2.5 text-sm focus:border-alert focus:outline-none focus:ring-2 focus:ring-alert/30"
             placeholder="DELETE"
           />
-          <div>
-            <Button variant="alert" disabled={confirmText !== "DELETE"} onClick={deleteAccount}>
-              <Trash2 className="h-4 w-4" /> Permanently delete my account
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+          <Button variant="alert" disabled={confirmText !== "DELETE"} onClick={deleteAccount}>
+            <Trash2 className="h-4 w-4" /> Permanently delete my account
+          </Button>
+        </div>
+      </section>
     </div>
   );
 }

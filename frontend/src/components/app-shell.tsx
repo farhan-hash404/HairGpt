@@ -4,20 +4,25 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  ChevronDown,
-  Sparkles,
-  LayoutDashboard,
-  ClipboardCheck,
   Activity,
   Calendar,
+  ChevronDown,
+  ClipboardCheck,
+  History,
   Layers,
+  LayoutDashboard,
+  Pill,
   Plus,
   Settings,
-  Pill,
   ShoppingBag,
-  History,
-  ShieldCheck,
 } from "lucide-react";
+
+import { buttonVariants } from "@/components/ui/button";
+import { ProgressiveBlur } from "@/components/ui/skiper-ui/skiper41";
+import { Link001 } from "@/components/ui/skiper-ui/skiper40";
+import { TextRoll } from "@/components/ui/skiper-ui/skiper58";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { Wordmark } from "@/components/wordmark";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -29,28 +34,40 @@ const NAV = [
 ];
 
 const MORE_NAV = [
-  { href: "/history", label: "Your History", icon: History },
-  { href: "/treatments", label: "Treatments & Regimen", icon: Pill },
-  { href: "/products", label: "Products & Ingredients", icon: ShoppingBag },
-  { href: "/settings", label: "Settings & Privacy", icon: Settings },
+  { href: "/history", label: "Your history", icon: History },
+  { href: "/treatments", label: "Treatments & regimen", icon: Pill },
+  { href: "/products", label: "Products & ingredients", icon: ShoppingBag },
+  { href: "/settings", label: "Settings & privacy", icon: Settings },
 ];
 
 function isActive(pathname: string, href: string) {
   return href === "/" ? pathname === "/" : pathname.startsWith(href);
 }
 
-function Wordmark() {
+/* Active page: ink label on a highlighter stroke. Others roll their letters
+   on hover (Skiper UI text roll). The rolled copy is decorative, so the
+   accessible name comes from a visually hidden label. */
+function NavLink({ href, label, active }: { href: string; label: string; active: boolean }) {
   return (
-    <Link href="/" className="group flex items-center gap-2.5" aria-label="HairGPT home">
-      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-accent to-blue-400 text-white shadow-sm shadow-accent/25 transition-transform group-hover:scale-105">
-        <Sparkles className="h-5 w-5" />
-      </div>
-      <div>
-        <span className="text-lg font-bold tracking-tight text-ink">HairGPT</span>
-        <span className="hidden select-none text-[10px] font-semibold tracking-wider text-ink-faint sm:block uppercase">
-          Clinical Tracking & AI Insights
-        </span>
-      </div>
+    <Link
+      href={href}
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        "relative px-3 py-2 text-[0.8125rem] font-medium transition-colors",
+        active ? "text-ink" : "text-ink-soft hover:text-ink"
+      )}
+    >
+      <span className="sr-only">{label}</span>
+      <span aria-hidden="true">
+        <TextRoll lineHeight={1.25}>{label}</TextRoll>
+      </span>
+      <span
+        aria-hidden="true"
+        className={cn(
+          "absolute inset-x-3 bottom-[5px] -z-10 h-[7px] origin-left bg-marker transition-transform duration-300 ease-out",
+          active ? "scale-x-100" : "scale-x-0"
+        )}
+      />
     </Link>
   );
 }
@@ -81,20 +98,22 @@ function MoreMenu({ pathname }: { pathname: string }) {
         aria-expanded={open}
         aria-haspopup="menu"
         className={cn(
-          "flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all",
-          active
-            ? "bg-accent-wash text-accent font-semibold"
-            : "text-ink-soft hover:bg-surface-sunken hover:text-ink"
+          "relative flex items-center gap-1 px-3 py-2 text-[0.8125rem] font-medium transition-colors",
+          active || open ? "text-ink" : "text-ink-soft hover:text-ink"
         )}
       >
         More
-        <ChevronDown className={cn("h-4 w-4 transition-transform duration-200", open && "rotate-180")} />
+        <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", open && "rotate-180")} />
+        {active && (
+          <span aria-hidden="true" className="absolute inset-x-3 bottom-[5px] -z-10 h-[7px] bg-marker" />
+        )}
       </button>
       {open && (
         <div
           role="menu"
-          className="panel absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-xl p-1.5 shadow-xl backdrop-blur-md animate-rise"
+          className="panel absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden p-1 shadow-[0_18px_40px_-18px_hsl(var(--ink)/0.35)] animate-rise"
         >
+          <p className="label px-3 pb-1.5 pt-2.5">Also in HairGPT</p>
           {MORE_NAV.map(({ href, label, icon: Icon }) => (
             <Link
               key={href}
@@ -102,13 +121,13 @@ function MoreMenu({ pathname }: { pathname: string }) {
               role="menuitem"
               onClick={() => setOpen(false)}
               className={cn(
-                "flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                "flex items-center gap-2.5 rounded px-3 py-2.5 text-sm transition-colors",
                 pathname.startsWith(href)
-                  ? "bg-accent-wash text-accent"
+                  ? "bg-surface-sunken font-medium text-ink"
                   : "text-ink-soft hover:bg-surface-sunken hover:text-ink"
               )}
             >
-              <Icon className="h-4 w-4 text-ink-faint" />
+              <Icon className="h-4 w-4 text-ink-faint" strokeWidth={1.75} />
               {label}
             </Link>
           ))}
@@ -118,61 +137,79 @@ function MoreMenu({ pathname }: { pathname: string }) {
   );
 }
 
+function Colophon() {
+  return (
+    <footer className="border-t border-rule print:hidden">
+      <div className="container grid gap-8 py-10 text-sm md:grid-cols-[1.4fr_1fr_1fr]">
+        <div>
+          <p className="font-display text-xl italic leading-snug text-ink">Observations, not diagnoses.</p>
+          <p className="mt-3 max-w-[58ch] text-[0.8125rem] leading-relaxed text-ink-soft">
+            HairGPT measures what a photograph can show and says how sure it is. It never diagnoses and never
+            prescribes; for anything that worries you, see a GP or a dermatologist.
+          </p>
+        </div>
+        <div>
+          <p className="label mb-3">Evidence</p>
+          <ul className="space-y-1.5 text-[0.8125rem] text-ink-soft">
+            <li>NHS, under the Open Government Licence v3</li>
+            <li>MedlinePlus, NIAMS and DailyMed (US public domain)</li>
+            <li>Europe PMC open-access reviews (CC BY / CC0)</li>
+          </ul>
+        </div>
+        <div>
+          <p className="label mb-3">Colophon</p>
+          <ul className="space-y-1.5 text-[0.8125rem] text-ink-soft">
+            <li>Set in Newsreader, Public Sans and IBM Plex Mono</li>
+            <li className="flex flex-wrap items-center gap-1">
+              Components by
+              <Link001 href="https://skiper-ui.com" className="inline-flex text-ink">
+                Skiper UI
+              </Link001>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   return (
-    <div className="flex min-h-screen flex-col bg-ground">
-      {/* Top Navbar */}
-      <header className="sticky top-0 z-40 border-b bg-surface/90 backdrop-blur-md">
+    <div className="flex min-h-screen flex-col">
+      <header className="sticky top-0 z-40 border-b border-rule bg-ground/85 backdrop-blur-md print:hidden">
         <div className="container flex h-16 items-center justify-between gap-4">
           <Wordmark />
 
-          {/* Desktop Navigation */}
-          <nav className="hidden items-center gap-1 md:flex" aria-label="Primary">
-            {NAV.map(({ href, label }) => {
-              const active = isActive(pathname, href);
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  aria-current={active ? "page" : undefined}
-                  className={cn(
-                    "relative rounded-lg px-3.5 py-2 text-sm font-medium transition-all",
-                    active
-                      ? "bg-accent-wash text-accent font-semibold shadow-xs"
-                      : "text-ink-soft hover:bg-surface-sunken hover:text-ink"
-                  )}
-                >
-                  {label}
-                </Link>
-              );
-            })}
+          <nav className="isolate hidden items-center md:flex" aria-label="Primary">
+            {NAV.map(({ href, label }) => (
+              <NavLink key={href} href={href} label={label} active={isActive(pathname, href)} />
+            ))}
             <MoreMenu pathname={pathname} />
           </nav>
 
-          {/* Header Action */}
-          <div className="hidden items-center gap-3 sm:flex">
-            <Link
-              href="/assessment"
-              className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-sm font-medium text-white shadow-sm shadow-accent/30 hover:bg-accent/90 transition-all active:scale-95"
-            >
-              <Plus className="h-4 w-4" />
-              <span>New Check</span>
+          <div className="flex items-center gap-1.5">
+            <ThemeToggle />
+            <Link href="/assessment" className={cn(buttonVariants({ size: "sm" }), "hidden h-9 px-3.5 sm:inline-flex")}>
+              <Plus className="h-3.5 w-3.5" strokeWidth={2.25} />
+              New check
             </Link>
           </div>
         </div>
+        {/* Content softens as it slides under the header (Skiper UI progressive blur). */}
+        <div className="pointer-events-none absolute inset-x-0 top-full h-5">
+          <ProgressiveBlur position="top" height="100%" blurAmount="2px" backgroundColor="hsl(var(--ground) / 0.7)" />
+        </div>
       </header>
 
-      {/* Main Content Area */}
-      <main className="container flex-1 py-8 md:py-10 pb-24 md:pb-12">{children}</main>
+      <main className="container flex-1 pb-28 pt-8 md:pb-16 md:pt-12 print:p-0">{children}</main>
 
-      {/* Mobile Bottom Navigation Bar */}
       <nav
-        className="fixed bottom-0 left-0 right-0 z-40 border-t bg-surface/95 backdrop-blur-lg md:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-rule bg-ground/95 backdrop-blur-lg md:hidden print:hidden"
         aria-label="Primary mobile"
       >
-        <div className="grid grid-cols-5 py-1.5 px-2">
+        <div className="grid grid-cols-5 px-2 pb-[max(env(safe-area-inset-bottom),0.35rem)] pt-1.5">
           {NAV.map(({ href, label, icon: Icon }) => {
             const active = isActive(pathname, href);
             return (
@@ -181,32 +218,26 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 href={href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex flex-col items-center justify-center gap-1 rounded-lg py-1.5 transition-colors",
-                  active ? "text-accent font-semibold" : "text-ink-faint hover:text-ink"
+                  "relative flex flex-col items-center justify-center gap-1 py-1.5 transition-colors",
+                  active ? "text-ink" : "text-ink-faint hover:text-ink"
                 )}
               >
-                <Icon className={cn("h-5 w-5", active && "text-accent stroke-[2.2]")} />
-                <span className="text-[11px]">{label}</span>
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    "absolute top-0 h-[3px] w-8 bg-marker transition-transform duration-300",
+                    active ? "scale-x-100" : "scale-x-0"
+                  )}
+                />
+                <Icon className="h-5 w-5" strokeWidth={active ? 2 : 1.6} />
+                <span className="font-mono text-[9.5px] uppercase tracking-[0.08em]">{label}</span>
               </Link>
             );
           })}
         </div>
       </nav>
 
-      {/* Footer */}
-      <footer className="border-t bg-surface-sunken">
-        <div className="container flex flex-col gap-3 py-6 text-xs text-ink-faint">
-          <div className="flex items-center gap-2 text-ink-soft font-medium">
-            <ShieldCheck className="h-4 w-4 text-accent" />
-            <span>Clinical Transparency & Privacy Safeguards</span>
-          </div>
-          <p className="max-w-[72ch] leading-relaxed">
-            HairGPT produces image-based observations and AI inferences —{" "}
-            <strong className="font-semibold text-ink-soft">not a medical diagnosis</strong>. It never prescribes
-            medication. All computer-vision outputs are informational heuristics. Always consult a board-certified dermatologist for clinical diagnoses and treatment prescriptions.
-          </p>
-        </div>
-      </footer>
+      <Colophon />
     </div>
   );
 }

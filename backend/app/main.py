@@ -11,9 +11,11 @@ from app.api.routers import (
     account,
     analyses,
     auth,
+    automation,
     comparisons,
     history,
     products,
+    qa,
     scans,
     timeline,
     treatments,
@@ -88,15 +90,24 @@ app.add_middleware(
 
 @app.get("/health", tags=["meta"])
 def health():
+    from app.core.cache import get_redis
+    from app.llm.chat import provider_info
+    from app.rag.index import get_rag_index
+
+    llm = provider_info()
+    index = get_rag_index()
     return {
         "status": "ok",
         "version": __version__,
         "cv_backend": settings.cv_backend,
-        "llm_provider": settings.llm_provider,
+        "llm": {"provider": llm.provider, "model": llm.model, "available": llm.available},
+        "evidence": {"documents": index.state.get("documents"), "chunks": index.state.get("chunks"),
+                     "embedding": index.state.get("embedding")},
+        "redis": get_redis() is not None,
         "notice": "Image-based observations only. Not a medical diagnosis. Never prescribes.",
     }
 
 
 API = "/api/v1"
-for r in (auth, scans, treatments, timeline, comparisons, products, analyses, account, history):
+for r in (auth, scans, treatments, timeline, comparisons, products, analyses, account, history, qa, automation):
     app.include_router(r.router, prefix=API)

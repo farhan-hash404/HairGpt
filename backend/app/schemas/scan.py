@@ -12,6 +12,8 @@ SKIN_VIEWS = ["front", "left", "right"]
 class ScanCreateIn(BaseModel):
     domain: str = Field(pattern="^(hair|skin)$")
     capture_protocol: str | None = None
+    # Optional focused scan: 1-3 regions instead of the full protocol.
+    focus_views: list[str] | None = None
     device_make: str | None = None
     lighting_label: str | None = None
 

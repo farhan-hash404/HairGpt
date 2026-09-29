@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import animate from "tailwindcss-animate";
 
 const config: Config = {
   // Theming is driven entirely by CSS variables (system + explicit override),
@@ -10,35 +11,40 @@ const config: Config = {
     container: { center: true, padding: "1.5rem", screens: { "2xl": "1180px" } },
     extend: {
       colors: {
-        ground: "hsl(var(--ground))",
+        ground: "hsl(var(--ground) / <alpha-value>)",
         surface: {
-          DEFAULT: "hsl(var(--surface))",
-          sunken: "hsl(var(--surface-sunken))",
+          DEFAULT: "hsl(var(--surface) / <alpha-value>)",
+          sunken: "hsl(var(--surface-sunken) / <alpha-value>)",
         },
         ink: {
-          DEFAULT: "hsl(var(--ink))",
-          soft: "hsl(var(--ink-soft))",
-          faint: "hsl(var(--ink-faint))",
+          DEFAULT: "hsl(var(--ink) / <alpha-value>)",
+          soft: "hsl(var(--ink-soft) / <alpha-value>)",
+          faint: "hsl(var(--ink-faint) / <alpha-value>)",
         },
         rule: {
-          DEFAULT: "hsl(var(--rule))",
-          strong: "hsl(var(--rule-strong))",
+          DEFAULT: "hsl(var(--rule) / <alpha-value>)",
+          strong: "hsl(var(--rule-strong) / <alpha-value>)",
         },
         accent: {
-          DEFAULT: "hsl(var(--accent))",
-          ink: "hsl(var(--accent-ink))",
-          wash: "hsl(var(--accent-wash))",
-          edge: "hsl(var(--accent-edge))",
+          DEFAULT: "hsl(var(--accent) / <alpha-value>)",
+          ink: "hsl(var(--accent-ink) / <alpha-value>)",
+          wash: "hsl(var(--accent-wash) / <alpha-value>)",
+          edge: "hsl(var(--accent-edge) / <alpha-value>)",
         },
-        ok: { DEFAULT: "hsl(var(--ok))", wash: "hsl(var(--ok-wash))" },
-        caution: { DEFAULT: "hsl(var(--caution))", wash: "hsl(var(--caution-wash))" },
-        alert: { DEFAULT: "hsl(var(--alert))", wash: "hsl(var(--alert-wash))" },
+        ok: { DEFAULT: "hsl(var(--ok) / <alpha-value>)", wash: "hsl(var(--ok-wash) / <alpha-value>)" },
+        caution: { DEFAULT: "hsl(var(--caution) / <alpha-value>)", wash: "hsl(var(--caution-wash) / <alpha-value>)" },
+        alert: { DEFAULT: "hsl(var(--alert) / <alpha-value>)", wash: "hsl(var(--alert-wash) / <alpha-value>)" },
+        // A highlighter: emphasis fills only, never text and never a state.
+        marker: "hsl(var(--marker) / <alpha-value>)",
       },
       borderColor: { DEFAULT: "hsl(var(--rule))" },
       borderRadius: {
         DEFAULT: "var(--radius)",
         md: "var(--radius)",
         lg: "var(--radius-lg)",
+        // Pages ask for xl/2xl in places; paper does not do bubbles.
+        xl: "var(--radius-xl)",
+        "2xl": "var(--radius-xl)",
       },
       fontFamily: {
         display: ["var(--font-display)", "ui-serif", "Georgia", "serif"],
@@ -56,6 +62,8 @@ const config: Config = {
         "2xl": ["1.75rem", { lineHeight: "1.2" }],
         "3xl": ["2.25rem", { lineHeight: "1.1" }],
         "4xl": ["3rem", { lineHeight: "1.03" }],
+        "5xl": ["3.75rem", { lineHeight: "1" }],
+        "6xl": ["4.75rem", { lineHeight: "0.95" }],
       },
       keyframes: {
         rise: {
@@ -73,7 +81,7 @@ const config: Config = {
       },
     },
   },
-  plugins: [],
+  plugins: [animate],
 };
 
 export default config;

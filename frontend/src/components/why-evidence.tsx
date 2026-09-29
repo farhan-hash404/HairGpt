@@ -1,8 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { ExternalLink, X } from "lucide-react";
+import { X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Link001 } from "@/components/ui/skiper-ui/skiper40";
 import { ConfidenceScale } from "@/components/confidence";
 import { cn } from "@/lib/utils";
 
@@ -106,16 +107,10 @@ export function WhyEvidence({
                       <Badge variant="flag">{e.evidence_grade.replace(/_/g, " ")}</Badge>
                     )}
                   </div>
-                  <a
-                    href={e.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="group inline-flex items-baseline gap-1.5 font-medium underline-offset-4 hover:underline"
-                  >
+                  <Link001 href={e.url} className="inline-flex font-medium text-ink">
                     {e.title}
-                    <ExternalLink className="h-3 w-3 shrink-0 self-center text-ink-faint" aria-hidden="true" />
-                  </a>
-                  <p className="mt-0.5 text-xs text-ink-faint">{e.publisher}</p>
+                  </Link001>
+                  <p className="caption mt-1">{e.publisher}</p>
                 </li>
               ))}
             </ul>
@@ -124,9 +119,9 @@ export function WhyEvidence({
               No medical sources attached — this item is general wellness information, not medical evidence.
             </p>
           )}
-          <p className="mt-4 border-t pt-3 text-xs text-ink-faint">
-            Sources are limited to AAD, FDA, NICE, NHS, and peer-reviewed dermatology literature. Social media is
-            never used.
+          <p className="caption mt-4 border-t pt-3">
+            Sources are limited to the NHS, MedlinePlus, NIAMS, DailyMed drug labels and open-access peer-reviewed
+            reviews. Social media is never used.
           </p>
         </Panel>
       )}

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { AlertTriangle, Camera, Check, RefreshCw, Upload } from "lucide-react";
 import { api, getToken, type CaptureReference, type QualityReport } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   EMPTY_HAIR,
@@ -216,13 +216,14 @@ export function GuidedCapture({
                 onClick={() => setCurrent(i)}
                 aria-current={state === "current" ? "step" : undefined}
                 className={cn(
-                  "flex items-center gap-1.5 rounded border px-2.5 py-1 text-xs transition-colors",
+                  "flex items-center gap-1.5 rounded-sm border px-2.5 py-1.5 font-mono text-[11px] tracking-[0.02em] transition-colors",
                   state === "pass" && "border-ok/40 bg-ok-wash text-ok",
                   state === "fail" && "border-alert/40 bg-alert-wash text-alert",
-                  state === "current" && "border-accent bg-accent-wash font-medium text-accent",
-                  state === "todo" && "border-rule text-ink-faint hover:text-ink-soft"
+                  state === "current" && "border-ink bg-surface font-medium text-ink shadow-[inset_0_-3px_0_hsl(var(--marker))]",
+                  state === "todo" && "border-rule text-ink-faint hover:border-rule-strong hover:text-ink-soft"
                 )}
               >
+                <span className="opacity-60">{String(i + 1).padStart(2, "0")}</span>
                 {state === "pass" && <Check className="h-3 w-3" aria-hidden="true" />}
                 {state === "fail" && <AlertTriangle className="h-3 w-3" aria-hidden="true" />}
                 {titleize(v)}
@@ -232,9 +233,13 @@ export function GuidedCapture({
         })}
       </ol>
 
-      {/* Camera / capture surface */}
+      {/* Camera / capture surface: a viewfinder with registration corners. */}
       <Card className="overflow-hidden">
         <div className="relative aspect-square w-full bg-black/90 sm:aspect-[4/3]">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-4 z-10 [--crop:rgba(255,255,255,0.75)] [--crop-len:22px] crop-marks"
+          />
           <video ref={videoRef} autoPlay playsInline muted className="h-full w-full object-cover" />
 
           {/* Ghost of the previous scan's same view — match this and the two
@@ -288,7 +293,7 @@ export function GuidedCapture({
               className="sr-only"
               onChange={(e) => e.target.files?.[0] && submitBlob(e.target.files[0])}
             />
-            <span className="inline-flex h-9 cursor-pointer items-center gap-2 rounded border border-rule-strong px-4 text-sm hover:bg-surface-sunken">
+            <span className={cn(buttonVariants({ variant: "outline" }), "cursor-pointer")}>
               <Upload className="h-4 w-4" /> Upload photo
             </span>
           </label>
@@ -306,7 +311,7 @@ export function GuidedCapture({
                 type="checkbox"
                 checked={ghostOn}
                 onChange={(e) => setGhostOn(e.target.checked)}
-                className="h-4 w-4 accent-[hsl(var(--accent))]"
+                className="h-4 w-4 accent-[hsl(var(--ink))]"
               />
               <span className="font-medium">Show last scan as a guide</span>
             </label>
@@ -320,7 +325,7 @@ export function GuidedCapture({
                   step={0.05}
                   value={ghostOpacity}
                   onChange={(e) => setGhostOpacity(Number(e.target.value))}
-                  className="w-28 accent-[hsl(var(--accent))]"
+                  className="w-28 accent-[hsl(var(--ink))]"
                   aria-label="Ghost overlay opacity"
                 />
               </label>
@@ -346,13 +351,20 @@ export function GuidedCapture({
         />
       )}
 
-      <div className="panel flex flex-wrap items-center justify-between gap-4 bg-surface-sunken p-4">
-        <p className="text-sm text-ink-soft">
-          <span className="readout font-medium text-ink">
-            {passedCount}/{views.length}
-          </span>{" "}
-          views passed quality
-        </p>
+      <div className="flex flex-wrap items-center justify-between gap-4 border-t border-ink pt-4">
+        <div className="min-w-[12rem] flex-1">
+          <p className="text-sm text-ink-soft">
+            <span className="readout font-medium text-ink">
+              {passedCount}/{views.length}
+            </span>{" "}
+            views passed quality
+          </p>
+          <div className="mt-2 flex max-w-xs gap-1" aria-hidden="true">
+            {views.map((v) => (
+              <span key={v} className={cn("h-[3px] flex-1", captured[v]?.overall_pass ? "bg-ink" : "bg-rule")} />
+            ))}
+          </div>
+        </div>
         <Button onClick={runAnalysis} disabled={!allPassed || analyzing}>
           {analyzing ? "Analysing…" : "Analyse scan"}
         </Button>

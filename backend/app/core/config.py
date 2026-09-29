@@ -57,6 +57,15 @@ class Settings(BaseSettings):
     # Pre-compute recommendation evidence in a background thread at startup.
     warm_caches: bool = True
 
+    # Redis: shared cache + rate-limit counters, and the Celery broker. Unset on
+    # single-container hosts, where everything falls back to process memory and
+    # Celery tasks run inline.
+    redis_url: str | None = None
+    # How long an identical evidence question reuses its verified answer.
+    qa_cache_ttl_s: int = 6 * 3600
+    # Shared secret for the n8n webhooks; unset disables them entirely.
+    automation_webhook_secret: str | None = None
+
     # LLM — "auto" picks the first provider with a key, else the deterministic
     # extractive path (fully grounded, never calls a model).
     llm_provider: str = "auto"  # auto | gemini | openai | anthropic | bedrock | none
@@ -74,6 +83,9 @@ class Settings(BaseSettings):
     llm_timeout_s: float = 6.0
     # Regeneration attempts when the judge rejects an explanation.
     llm_max_revisions: int = 1
+    # LangGraph checkpoints: let a paused (human-in-the-loop) analysis resume in
+    # a later request or after a restart. ":memory:" for tests.
+    checkpoint_db: str = "./data/checkpoints.sqlite"
 
     # Safety
     safety_strict: bool = True

@@ -181,9 +181,9 @@ function Assessment() {
                       setH("duration_months", e.target.value === "" ? null : Number(e.target.value))
                     }
                     placeholder="e.g. 6"
-                    className="w-32 rounded-xl border border-rule bg-surface px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-accent"
+                    className="readout w-32 rounded border border-rule-strong bg-surface px-3.5 py-2.5 text-base focus:border-ink focus:outline-none focus:ring-2 focus:ring-marker/70"
                   />
-                  <span className="text-sm font-medium text-ink-soft">months</span>
+                  <span className="label">months</span>
                 </div>
               </Fieldset>
 
@@ -312,7 +312,7 @@ function Assessment() {
               />
 
               <div className="mt-6 border-t border-rule pt-6 space-y-3">
-                <p className="text-sm font-semibold text-ink">Additional Scalp Sensations:</p>
+                <p className="label">Additional scalp sensations</p>
                 <div className="flex flex-wrap gap-2.5">
                   <TagChip
                     label="Painful, burning, or tender scalp"
@@ -351,7 +351,7 @@ function Assessment() {
                 size="lg"
                 onClick={back}
                 disabled={index === 0}
-                className="gap-2 rounded-xl"
+                className="gap-2"
               >
                 <ArrowLeft className="h-4 w-4" />
                 <span>Back</span>
@@ -364,12 +364,7 @@ function Assessment() {
                 >
                   Save & Exit
                 </Link>
-                <Button
-                  size="lg"
-                  onClick={next}
-                  disabled={saving}
-                  className="gap-2 rounded-xl bg-accent px-6 text-white shadow-sm shadow-accent/25 hover:bg-accent/90"
-                >
+                <Button size="lg" onClick={next} disabled={saving} className="gap-2 px-6">
                   <span>{saving ? "Saving…" : index === STEPS.length - 2 ? "Start Camera Scan" : "Continue"}</span>
                   <ArrowRight className="h-4 w-4" />
                 </Button>

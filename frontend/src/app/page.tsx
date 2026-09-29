@@ -3,28 +3,24 @@
 import * as React from "react";
 import Link from "next/link";
 import {
-  Sparkles,
-  Camera,
-  Calendar,
-  Activity,
-  ArrowRight,
-  ShieldCheck,
-  FileText,
-  Clock,
-  CheckCircle2,
   AlertTriangle,
-  TrendingUp,
+  ArrowRight,
+  ArrowUpRight,
+  Camera,
+  CheckCircle2,
+  FileText,
   Layers,
-  ChevronRight,
+  Stethoscope,
 } from "lucide-react";
 import { api, modelTrustLabel, type Analysis } from "@/lib/api";
 import { AuthGate } from "@/components/auth-gate";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { buttonVariants } from "@/components/ui/button";
 import { ConfidenceScale } from "@/components/confidence";
+import { PageHeader } from "@/components/page-header";
+import { PercentReadout, Readout } from "@/components/readout";
 import { WhyEvidence } from "@/components/why-evidence";
-import { pct } from "@/lib/utils";
+import { ReticleMark } from "@/components/wordmark";
+import { cn } from "@/lib/utils";
 
 const SCAN_INTERVAL_DAYS = 30;
 
@@ -64,8 +60,8 @@ function Overview() {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
         <div className="flex items-center gap-3 text-ink-soft">
-          <div className="h-5 w-5 animate-spin rounded-full border-2 border-accent border-t-transparent" />
-          <p className="text-sm font-medium">Loading your hair profile…</p>
+          <ReticleMark className="h-6 w-6 animate-spin text-ink [animation-duration:2.4s]" />
+          <p className="label">Loading your record…</p>
         </div>
       </div>
     );
@@ -74,321 +70,343 @@ function Overview() {
   if (!latest) return <FirstRun />;
 
   const lastScan = scans[0];
-  const daysSince = lastScan
-    ? Math.floor((Date.now() - new Date(lastScan.created_at).getTime()) / 86400000)
-    : null;
+  const recordedAt = lastScan ? new Date(lastScan.created_at) : null;
+  const daysSince = recordedAt ? Math.floor((Date.now() - recordedAt.getTime()) / 86400000) : null;
   const nextIn = daysSince === null ? null : Math.max(0, SCAN_INTERVAL_DAYS - daysSince);
   const avgAdherence =
     adherence.length > 0 ? adherence.reduce((a, t) => a + t.adherence_pct, 0) / adherence.length : null;
 
-  const hs = latest?.hair_summary ?? null;
-  const trust = latest?.observations?.length ? modelTrustLabel(latest.observations[0]) : null;
-  const verdict = latest?.safety_verdict?.verdict ?? "ok";
+  const hs = latest.hair_summary ?? null;
+  const trust = latest.observations?.length ? modelTrustLabel(latest.observations[0]) : null;
+  const verdict = latest.safety_verdict?.verdict ?? "ok";
+  const density = word(hs?.apparent_density?.label ?? hs?.crown_density?.label);
+  const nextSteps = (latest.recommendations ?? []).filter((r) => r.title).slice(0, 4);
 
   return (
-    <div className="space-y-8 animate-rise">
-      {/* Welcome & Overview Header Card */}
-      <div className="rounded-2xl border border-rule bg-gradient-to-br from-surface to-surface-sunken p-6 sm:p-8 shadow-xs">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="flex items-center gap-1.5 rounded-full bg-accent-wash px-3 py-1 text-xs font-semibold text-accent">
-                <Sparkles className="h-3.5 w-3.5" />
-                Latest Reading
-              </span>
-              {lastScan && (
-                <span className="text-xs text-ink-faint">
-                  Recorded on {new Date(lastScan.created_at).toLocaleDateString()}
-                </span>
-              )}
-            </div>
-            <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">
-              {headline(latest.overall_confidence, hs)}
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-soft">
-              {latest.explanation?.summary ?? "Based on your most recent standardized 7-view capture."}
-            </p>
-
-            <div className="mt-4 flex flex-wrap items-center gap-2">
-              <span
-                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${
-                  verdict === "refer"
-                    ? "bg-alert-wash text-alert"
-                    : verdict === "caution"
-                      ? "bg-caution-wash text-caution"
-                      : "bg-ok-wash text-ok"
-                }`}
-              >
-                {verdict === "ok" ? (
-                  <CheckCircle2 className="h-3.5 w-3.5" />
-                ) : (
-                  <AlertTriangle className="h-3.5 w-3.5" />
-                )}
-                Safety Status: {verdict.toUpperCase()}
-              </span>
-
-              {trust && (
-                <span className="rounded-full bg-surface-sunken border border-rule px-3 py-1 text-xs font-medium text-ink-faint">
-                  {trust.text}
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Quick Action Buttons */}
-          <div className="flex flex-wrap items-center gap-2.5">
-            <Link href="/assessment">
-              <Button size="lg" className="rounded-xl bg-accent text-white shadow-sm hover:bg-accent/90 gap-2">
-                <Camera className="h-4 w-4" />
-                <span>New Check</span>
-              </Button>
+    <div className="animate-rise">
+      <PageHeader
+        index="Nº 01"
+        eyebrow={recordedAt ? `Overview · recorded ${recordedAt.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}` : "Overview"}
+        title={
+          latest.overall_confidence < 0.4 ? (
+            <>
+              Baseline <span className="italic text-ink-soft">in progress.</span>
+            </>
+          ) : density ? (
+            <>
+              Apparent density reads <span className="marker">{density}</span>.
+            </>
+          ) : (
+            "Baseline recorded."
+          )
+        }
+        dek="From your most recent standardised capture. Every reading below states how sure it is."
+        actions={
+          <>
+            <Link href="/assessment" className={buttonVariants()}>
+              <Camera className="h-4 w-4" strokeWidth={2} />
+              New check
             </Link>
-            <Link href="/compare">
-              <Button size="lg" variant="outline" className="rounded-xl gap-2">
-                <Layers className="h-4 w-4" />
-                <span>Compare</span>
-              </Button>
+            <Link href="/compare" className={buttonVariants({ variant: "outline" })}>
+              <Layers className="h-4 w-4" strokeWidth={1.75} />
+              Compare
             </Link>
-            <Link href={`/report/${latest.session_id}`}>
-              <Button size="lg" variant="outline" className="rounded-xl gap-2">
-                <FileText className="h-4 w-4" />
-                <span>Doctor Report</span>
-              </Button>
+            <Link href={`/report/${latest.session_id}`} className={buttonVariants({ variant: "outline" })}>
+              <FileText className="h-4 w-4" strokeWidth={1.75} />
+              Doctor report
             </Link>
-          </div>
-        </div>
+          </>
+        }
+      />
 
-        {/* Confidence scale widget */}
-        <div className="mt-6 border-t border-rule pt-4">
-          <ConfidenceScale
-            value={latest.overall_confidence}
-            label="Confidence calibration (based on capture sharpness & framing)"
-          />
-        </div>
-      </div>
-
-      {/* Key Metric KPI Cards */}
-      <section>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-ink">Core Measurements</h2>
-          <Link href="/timeline" className="text-xs font-semibold text-accent hover:underline flex items-center gap-1">
-            <span>View Timeline</span>
-            <ChevronRight className="h-3.5 w-3.5" />
-          </Link>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {/* Hairline Card */}
-          <MetricCard
-            title="Hairline Position"
-            value={hs?.hairline_position?.label ? "Localized" : "Baseline Set"}
-            caption={hs?.hairline_position?.label ?? "Recession boundary detected"}
-            confidence={hs?.hairline_position?.confidence}
-            href="/timeline"
-            icon={TrendingUp}
-          />
-
-          {/* Crown Card */}
-          <MetricCard
-            title="Crown Density"
-            value={hs?.crown_density?.label?.replace("crown appears ", "") ?? "Moderate"}
-            caption="Apparent density at top-back swirl"
-            confidence={hs?.crown_density?.confidence}
-            href="/timeline"
-            icon={Activity}
-          />
-
-          {/* Scalp Visibility Card */}
-          <MetricCard
-            title="Scalp Visibility"
-            value={pct(hs?.scalp_visibility?.value ?? null)}
-            caption="Fraction of exposed scalp contrast"
-            confidence={hs?.scalp_visibility?.confidence}
-            href="/timeline"
-            icon={CheckCircle2}
-          />
-        </div>
+      {/* Status strip: the four facts to read before any number. */}
+      <section aria-label="Status" className="grid gap-px border border-rule bg-rule sm:grid-cols-2 lg:grid-cols-4">
+        <StatusCell label="Safety screen">
+          <VerdictLine verdict={verdict} />
+        </StatusCell>
+        <StatusCell label="Overall confidence">
+          <ConfidenceScale value={latest.overall_confidence} label="this reading" size="sm" showLabel={false} />
+        </StatusCell>
+        <StatusCell label="Last capture">
+          <p className="text-[0.95rem]">
+            {daysSince === null ? "—" : daysSince === 0 ? "Today" : `${daysSince} day${daysSince === 1 ? "" : "s"} ago`}
+          </p>
+          <p className="caption mt-1">Next due {nextIn === null ? "—" : nextIn === 0 ? "now" : `in ${nextIn} days`}</p>
+        </StatusCell>
+        <StatusCell label="Model">
+          <p className="text-[0.95rem]">{trust ? trust.text : "Validated model"}</p>
+          <p className="caption mt-1">Readings are observations, not diagnoses</p>
+        </StatusCell>
       </section>
 
-      {/* Regimen & Schedule Tracker */}
-      <section>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-ink">Regimen & Progress</h2>
-          <Link href="/treatments" className="text-xs font-semibold text-accent hover:underline flex items-center gap-1">
-            <span>Manage Treatments</span>
-            <ChevronRight className="h-3.5 w-3.5" />
-          </Link>
+      <Section letter="A" title="Measurements" more={{ href: "/timeline", label: "Timeline" }}>
+        <div className="grid gap-px border border-rule bg-rule sm:grid-cols-2 lg:grid-cols-4">
+          <Plate
+            label="Apparent density"
+            href="/timeline"
+            value={<span className="font-display text-4xl leading-none">{word(hs?.apparent_density?.label) ?? "—"}</span>}
+            caption={hs?.apparent_density?.value != null ? `Index ${hs.apparent_density.value.toFixed(2)} on a 0–1 scale` : "Whole-scalp coverage"}
+            confidence={hs?.apparent_density?.confidence}
+          />
+          <Plate
+            label="Crown"
+            href="/timeline"
+            value={<span className="font-display text-4xl leading-none">{word(hs?.crown_density?.label) ?? "—"}</span>}
+            caption="Density at the crown swirl"
+            confidence={hs?.crown_density?.confidence}
+          />
+          <Plate
+            label="Scalp visibility"
+            href="/timeline"
+            value={<PercentReadout value={hs?.scalp_visibility?.value} className="text-4xl font-medium tracking-[-0.04em]" />}
+            caption="Share of the frame where scalp shows through"
+            confidence={hs?.scalp_visibility?.confidence}
+          />
+          <Plate
+            label="Hairline"
+            href="/timeline"
+            value={<span className="font-display text-4xl leading-none">{hs?.hairline_position?.label ? "traced" : "—"}</span>}
+            caption="Position recorded as your baseline; see limitations"
+            confidence={hs?.hairline_position?.confidence}
+          />
         </div>
+      </Section>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {/* Adherence Card */}
-          <MetricCard
-            title="Treatment Adherence"
-            value={avgAdherence === null ? "—" : `${avgAdherence.toFixed(0)}%`}
+      <Section letter="B" title="Regimen & progress" more={{ href: "/treatments", label: "Treatments" }}>
+        <div className="grid gap-px border border-rule bg-rule sm:grid-cols-3">
+          <Plate
+            label="Adherence"
+            href="/treatments"
+            value={<Readout value={avgAdherence} suffix="%" className="text-4xl font-medium tracking-[-0.04em]" />}
             caption={
               adherence.length
-                ? `${adherence.length} active treatment${adherence.length === 1 ? "" : "s"} tracked`
+                ? `Across ${adherence.length} active treatment${adherence.length === 1 ? "" : "s"}`
                 : "No treatments recorded yet"
             }
-            href="/treatments"
-            icon={Clock}
           />
-
-          {/* Shedding Trend */}
-          <MetricCard
-            title="Shedding Trend"
-            value={sheddingValue(shedding)}
-            caption={shedding?.trend_note ?? "Log shedding count to compute trend"}
+          <Plate
+            label="Shedding"
             href="/shedding"
-            icon={Activity}
+            value={<span className="font-display text-4xl leading-none">{sheddingWord(shedding)}</span>}
+            caption={shedding?.trend_note ?? "Log daily counts to see a trend"}
           />
-
-          {/* Next Scan Due */}
-          <MetricCard
-            title="Next Check Due"
-            value={nextIn === null ? "—" : nextIn === 0 ? "Ready" : `${nextIn} days`}
-            caption={`${SCAN_INTERVAL_DAYS}-day interval ensures comparable hair cycles`}
+          <Plate
+            label="Next check"
             href="/assessment"
-            icon={Calendar}
+            value={
+              nextIn === 0 ? (
+                <span className="font-display text-4xl leading-none">due now</span>
+              ) : (
+                <Readout value={nextIn} suffix=" days" className="text-4xl font-medium tracking-[-0.04em]" />
+              )
+            }
+            caption={`${SCAN_INTERVAL_DAYS}-day spacing keeps hair cycles comparable`}
           />
         </div>
-      </section>
+      </Section>
 
-      {/* Clinical Evidence & Rationale Card */}
-      <Card className="rounded-2xl border border-rule overflow-hidden shadow-xs">
-        <CardContent className="p-6 sm:p-8">
-          <div className="flex items-center gap-2 mb-4">
-            <ShieldCheck className="h-5 w-5 text-accent" />
-            <h3 className="text-base font-bold text-ink">Clinical Evidence & Method Transparency</h3>
+      <div className="mt-14 grid gap-10 lg:grid-cols-12">
+        {nextSteps.length > 0 && (
+          <section className="lg:col-span-5">
+            <SectionTitle letter="C" title="Suggested next steps" />
+            <ol className="mt-4 divide-y divide-rule border-y border-rule">
+              {nextSteps.map((r, i) => (
+                <li key={`${i}-${r.title}`} className="grid grid-cols-[2.25rem_1fr] gap-3 py-3.5">
+                  <span className="readout pt-0.5 text-sm text-ink-faint">{String(i + 1).padStart(2, "0")}</span>
+                  <span className="text-[0.95rem] leading-snug">{r.title}</span>
+                </li>
+              ))}
+            </ol>
+            <Link
+              href={`/scan/${latest.session_id}/result`}
+              className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-accent underline decoration-accent/40 underline-offset-4 hover:decoration-accent"
+            >
+              Full result, with reasons
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </section>
+        )}
+        <section className={nextSteps.length > 0 ? "lg:col-span-7" : "lg:col-span-12"}>
+          <SectionTitle letter={nextSteps.length > 0 ? "D" : "C"} title="Method & sources" />
+          <div className="panel mt-4 p-5 sm:p-6">
+            <p className="max-w-[62ch] text-sm leading-relaxed text-ink-soft">
+              How each reading was made, how sure it is, what it cannot tell you, and the published sources behind
+              every suggestion.
+            </p>
+            <WhyEvidence
+              className="mt-4"
+              explain={latest.explanation ?? undefined}
+              evidence={latest.explanation?.evidence}
+            />
           </div>
-          <WhyEvidence explain={latest.explanation ?? undefined} evidence={latest.explanation?.evidence} />
-        </CardContent>
-      </Card>
+        </section>
+      </div>
     </div>
   );
 }
 
-function MetricCard({
+function word(label: string | null | undefined) {
+  if (!label) return null;
+  return String(label).replace(/^apparent |^crown appears /, "").trim() || null;
+}
+
+function sheddingWord(trend: any) {
+  if (!trend || trend.trend === "insufficient_data") return "untracked";
+  return { increasing: "rising", decreasing: "easing", stable: "steady" }[trend.trend as string] ?? "steady";
+}
+
+function SectionTitle({ letter, title }: { letter: string; title: string }) {
+  return (
+    <h2 className="flex items-baseline gap-3 text-2xl">
+      <span className="readout text-sm text-ink-faint">{letter}.</span>
+      {title}
+    </h2>
+  );
+}
+
+function Section({
+  letter,
   title,
+  more,
+  children,
+}: {
+  letter: string;
+  title: string;
+  more?: { href: string; label: string };
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="mt-14">
+      <div className="mb-4 flex items-end justify-between gap-4">
+        <SectionTitle letter={letter} title={title} />
+        {more && (
+          <Link
+            href={more.href}
+            className="group inline-flex items-center gap-1 text-sm text-ink-soft transition-colors hover:text-ink"
+          >
+            {more.label}
+            <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+          </Link>
+        )}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function StatusCell({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="bg-surface p-4 sm:p-5">
+      <p className="label mb-2.5">{label}</p>
+      {children}
+    </div>
+  );
+}
+
+function VerdictLine({ verdict }: { verdict: "ok" | "caution" | "refer" }) {
+  const config = {
+    ok: { icon: CheckCircle2, tone: "text-ok", text: "No red flags", note: "Nothing needs a clinician right now" },
+    caution: { icon: AlertTriangle, tone: "text-caution", text: "Interpret with caution", note: "Read the reasons before acting" },
+    refer: { icon: Stethoscope, tone: "text-alert", text: "See a clinician", note: "Self-care suggestions are withheld" },
+  }[verdict];
+  const Icon = config.icon;
+  return (
+    <>
+      <p className={cn("flex items-center gap-2 text-[0.95rem] font-medium", config.tone)}>
+        <Icon className="h-4 w-4 shrink-0" strokeWidth={2} />
+        {config.text}
+      </p>
+      <p className="caption mt-1">{config.note}</p>
+    </>
+  );
+}
+
+/* A measurement mounted like an instrument plate in a ruled tray. */
+function Plate({
+  label,
   value,
   caption,
   confidence,
   href,
-  icon: Icon,
 }: {
-  title: string;
-  value: string;
+  label: string;
+  value: React.ReactNode;
   caption: string;
   confidence?: number | null;
   href: string;
-  icon: any;
 }) {
   return (
     <Link
       href={href}
-      className="group flex flex-col justify-between rounded-2xl border border-rule bg-surface p-5 shadow-xs transition-all hover:border-accent-edge hover:shadow-md hover:-translate-y-0.5"
+      className="group relative flex min-h-[12.5rem] flex-col bg-surface p-5 transition-colors hover:bg-surface-sunken"
     >
-      <div>
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-xs font-semibold uppercase tracking-wider text-ink-faint">{title}</span>
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-surface-sunken text-ink-faint group-hover:bg-accent-wash group-hover:text-accent transition-colors">
-            <Icon className="h-4 w-4" />
-          </div>
-        </div>
-        <p className="mt-2 text-2xl font-bold tracking-tight text-ink group-hover:text-accent transition-colors">
-          {value}
-        </p>
-        <p className="mt-1 text-xs text-ink-soft leading-relaxed">{caption}</p>
+      <span
+        aria-hidden="true"
+        className="absolute inset-y-0 left-0 w-[3px] origin-top scale-y-0 bg-marker transition-transform duration-300 group-hover:scale-y-100"
+      />
+      <div className="flex items-start justify-between gap-2">
+        <span className="label">{label}</span>
+        <ArrowUpRight className="h-3.5 w-3.5 text-ink-faint opacity-0 transition-opacity group-hover:opacity-100" />
       </div>
-
+      <div className="mt-5 flex-1">
+        <div className="text-ink">{value}</div>
+        <p className="mt-2 text-[0.8125rem] leading-snug text-ink-soft">{caption}</p>
+      </div>
       {confidence != null && (
-        <div className="mt-4 flex items-center justify-between border-t border-rule pt-3 text-[11px] text-ink-faint">
-          <span>Accuracy Confidence</span>
-          <span className="font-semibold text-ink">{(confidence * 100).toFixed(0)}%</span>
-        </div>
+        <ConfidenceScale value={confidence} label={label} size="sm" showBand={false} className="mt-4" />
       )}
     </Link>
   );
 }
 
-function headline(confidence: number, hs: any) {
-  if (confidence < 0.4) return "Baseline Recording in Progress";
-  const label = hs?.apparent_density?.label ?? hs?.crown_density?.label;
-  if (!label) return "Baseline Recorded";
-  return `Apparent Density: ${String(label).replace(/^apparent |^crown appears /, "")}`;
-}
-
-function sheddingValue(trend: any) {
-  if (!trend || trend.trend === "insufficient_data") return "Stable / Untracked";
-  return { increasing: "Rising", decreasing: "Decreasing", stable: "Steady" }[trend.trend as string] ?? "Stable";
-}
-
 function FirstRun() {
+  const steps = [
+    { title: "About you", body: "When and where thinning started, in your own words." },
+    { title: "Health & habits", body: "Medical, stress and styling factors a photograph cannot see." },
+    { title: "Safety screen", body: "Checks for signs that need a clinician before anything else." },
+    { title: "Guided capture", body: "Framing guides for each view, so next month compares fairly." },
+  ];
   return (
-    <div className="mx-auto max-w-3xl py-6 animate-rise">
-      <div className="rounded-3xl border border-rule bg-gradient-to-br from-surface via-surface to-surface-sunken p-8 sm:p-12 shadow-sm text-center">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-accent to-blue-400 text-white shadow-md shadow-accent/25">
-          <Sparkles className="h-7 w-7" />
-        </div>
-
-        <h1 className="mt-6 text-3xl font-bold tracking-tight text-ink sm:text-4xl">
-          Welcome to HairGPT
-        </h1>
-        <p className="mx-auto mt-3 max-w-xl text-base text-ink-soft leading-relaxed">
-          Get a comprehensive, clinical-grade baseline analysis of your hair and scalp. Track density changes over time with transparent AI confidence scores.
-        </p>
-
-        <div className="mt-8 grid gap-4 text-left sm:grid-cols-2">
-          {[
-            {
-              step: "01",
-              title: "About You & Your Story",
-              desc: "Quick questions regarding when and where hair thinning was first noticed.",
-            },
-            {
-              step: "02",
-              title: "Health & Habit Factors",
-              desc: "Assess medical, stress, and styling variables that photos alone cannot see.",
-            },
-            {
-              step: "03",
-              title: "Clinical Safety Screen",
-              desc: "Automated heuristic checks to detect signs requiring a physician.",
-            },
-            {
-              step: "04",
-              title: "Guided 7-Angle Scan",
-              desc: "On-screen guides calibrate contrast and sharpness for longitudinal tracking.",
-            },
-          ].map((item) => (
-            <div
-              key={item.step}
-              className="flex items-start gap-3.5 rounded-2xl border border-rule bg-surface p-4 shadow-xs"
-            >
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-accent-wash text-xs font-bold text-accent">
-                {item.step}
-              </span>
+    <div className="animate-rise">
+      <PageHeader
+        index="Nº 01"
+        eyebrow="Overview · no readings yet"
+        title={
+          <>
+            Start your <span className="marker">baseline</span>.
+          </>
+        }
+        dek="Four short steps, about ten minutes. The first capture becomes the reference every later one is measured against."
+      />
+      <div className="grid gap-10 lg:grid-cols-12">
+        <ol className="divide-y divide-rule border-y border-rule lg:col-span-7">
+          {steps.map((s, i) => (
+            <li key={s.title} className="grid grid-cols-[3rem_1fr] gap-x-4 py-5">
+              <span className="readout pt-1 text-sm text-ink-faint">{String(i + 1).padStart(2, "0")}</span>
               <div>
-                <p className="text-sm font-semibold text-ink">{item.title}</p>
-                <p className="mt-1 text-xs text-ink-soft leading-snug">{item.desc}</p>
+                <p className="font-display text-2xl leading-tight">{s.title}</p>
+                <p className="mt-1 text-sm leading-relaxed text-ink-soft">{s.body}</p>
               </div>
-            </div>
+            </li>
           ))}
-        </div>
-
-        <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
-          <Link href="/assessment">
-            <Button size="lg" className="rounded-xl bg-accent px-8 py-3 text-white shadow-md shadow-accent/25 hover:bg-accent/90 gap-2">
-              <span>Start Free Assessment</span>
+        </ol>
+        <div className="lg:col-span-5">
+          <div className="crop-marks">
+            <div className="graph-paper flex aspect-[4/3] items-center justify-center border border-rule bg-surface">
+              <ReticleMark className="h-24 w-24 text-ink-faint" />
+            </div>
+          </div>
+          <p className="caption mt-3">Fig. 1 · Your first plate will be mounted here.</p>
+          <div className="mt-6 flex flex-wrap gap-2">
+            <Link href="/assessment" className={buttonVariants({ size: "lg" })}>
+              Start the assessment
               <ArrowRight className="h-4 w-4" />
-            </Button>
-          </Link>
-          <Link href="/scan/hair">
-            <Button size="lg" variant="outline" className="rounded-xl px-6 py-3 gap-2">
-              <Camera className="h-4 w-4" />
-              <span>Just Take a Scan</span>
-            </Button>
-          </Link>
+            </Link>
+            <Link href="/scan/hair" className={buttonVariants({ size: "lg", variant: "outline" })}>
+              <Camera className="h-4 w-4" strokeWidth={1.75} />
+              Just take a scan
+            </Link>
+          </div>
         </div>
       </div>
     </div>

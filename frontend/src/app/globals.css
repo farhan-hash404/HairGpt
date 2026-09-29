@@ -3,104 +3,117 @@
 @tailwind utilities;
 
 /* ---------------------------------------------------------------------------
-   HairGPT Modern Clinical Design System
-   Friendly, accessible, and professional health-tech aesthetic.
+   HairGPT: the annotated clinical atlas.
+
+   The product measures, then cites. So the interface borrows from the two
+   places that do the same: a dermatology atlas (serif plates, figure captions,
+   numbered references) and a lab instrument (mono readouts, ruler ticks,
+   crop marks). Warm paper and ink, one clinical accent, one highlighter.
+
+   - accent  "surgical green": the colour medicine chose for drapes and scrubs
+             because it rests the eye. Used for links, focus and selection.
+   - marker  a highlighter, for emphasis only; never text, never state.
+   - ok / caution / alert keep their own hues, far from both, so a finding
+             is never mistaken for decoration.
 --------------------------------------------------------------------------- */
 
 @layer base {
   :root {
-    /* Ground & surfaces — soft, warm clinical slate/porcelain */
-    --ground: 210 20% 98%;
-    --surface: 0 0% 100%;
-    --surface-sunken: 214 20% 95%;
+    --ground: 40 33% 95%;
+    --surface: 42 45% 98%;
+    --surface-sunken: 38 24% 91%;
 
-    /* Ink — deep navy charcoal with high legibility */
-    --ink: 218 30% 12%;
-    --ink-soft: 215 16% 40%;
-    --ink-faint: 215 12% 58%;
+    --ink: 30 12% 10%;
+    --ink-soft: 30 6% 33%;
+    --ink-faint: 32 6% 49%;
 
-    /* Gentle border rules */
-    --rule: 214 20% 89%;
-    --rule-strong: 214 18% 78%;
+    --rule: 36 18% 84%;
+    --rule-strong: 34 12% 68%;
 
-    /* Modern vibrant cobalt / medical indigo */
-    --accent: 221 83% 53%;
-    --accent-ink: 0 0% 100%;
-    --accent-wash: 221 95% 97%;
-    --accent-edge: 221 70% 85%;
+    --accent: 174 52% 24%;
+    --accent-ink: 42 45% 98%;
+    --accent-wash: 170 30% 92%;
+    --accent-edge: 172 22% 72%;
 
-    /* Semantic states */
-    --ok: 154 58% 36%;
-    --ok-wash: 154 60% 95%;
-    --caution: 38 92% 44%;
-    --caution-wash: 38 85% 95%;
-    --alert: 356 75% 52%;
-    --alert-wash: 356 85% 96%;
+    --marker: 52 100% 64%;
 
-    --focus: 221 83% 53%;
+    --ok: 98 38% 29%;
+    --ok-wash: 96 34% 91%;
+    --caution: 34 82% 33%;
+    --caution-wash: 40 70% 90%;
+    --alert: 354 62% 43%;
+    --alert-wash: 356 60% 94%;
 
-    /* Modern friendly radii */
-    --radius: 10px;
-    --radius-lg: 14px;
-    --radius-xl: 20px;
+    --focus: 174 52% 30%;
+
+    --radius: 4px;
+    --radius-lg: 6px;
+    --radius-xl: 10px;
+
+    --grain-opacity: 0.05;
   }
 
-  /* System dark mode */
+  /* "Darkroom": the same atlas on a lightbox. */
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --ground: 222 47% 7%;
-      --surface: 222 36% 11%;
-      --surface-sunken: 222 40% 9%;
+      --ground: 30 9% 7%;
+      --surface: 30 8% 10%;
+      --surface-sunken: 30 9% 5%;
 
-      --ink: 210 30% 96%;
-      --ink-soft: 215 20% 70%;
-      --ink-faint: 215 15% 52%;
+      --ink: 40 28% 91%;
+      --ink-soft: 38 10% 69%;
+      --ink-faint: 36 7% 52%;
 
-      --rule: 217 25% 18%;
-      --rule-strong: 217 25% 26%;
+      --rule: 30 7% 19%;
+      --rule-strong: 30 6% 30%;
 
-      --accent: 217 91% 60%;
-      --accent-ink: 222 47% 8%;
-      --accent-wash: 221 65% 16%;
-      --accent-edge: 221 45% 28%;
+      --accent: 172 42% 54%;
+      --accent-ink: 30 9% 7%;
+      --accent-wash: 174 30% 13%;
+      --accent-edge: 174 24% 28%;
 
-      --ok: 154 55% 54%;
-      --ok-wash: 154 45% 14%;
-      --caution: 38 88% 60%;
-      --caution-wash: 38 45% 15%;
-      --alert: 356 78% 62%;
-      --alert-wash: 356 45% 16%;
+      --marker: 52 88% 58%;
 
-      --focus: 217 91% 60%;
+      --ok: 96 36% 58%;
+      --ok-wash: 96 24% 12%;
+      --caution: 38 80% 60%;
+      --caution-wash: 38 40% 12%;
+      --alert: 354 72% 66%;
+      --alert-wash: 354 40% 13%;
+
+      --focus: 172 42% 54%;
+      --grain-opacity: 0.07;
     }
   }
 
-  /* Explicit dark mode */
   :root[data-theme="dark"] {
-    --ground: 222 47% 7%;
-    --surface: 222 36% 11%;
-    --surface-sunken: 222 40% 9%;
+    --ground: 30 9% 7%;
+    --surface: 30 8% 10%;
+    --surface-sunken: 30 9% 5%;
 
-    --ink: 210 30% 96%;
-    --ink-soft: 215 20% 70%;
-    --ink-faint: 215 15% 52%;
+    --ink: 40 28% 91%;
+    --ink-soft: 38 10% 69%;
+    --ink-faint: 36 7% 52%;
 
-    --rule: 217 25% 18%;
-    --rule-strong: 217 25% 26%;
+    --rule: 30 7% 19%;
+    --rule-strong: 30 6% 30%;
 
-    --accent: 217 91% 60%;
-    --accent-ink: 222 47% 8%;
-    --accent-wash: 221 65% 16%;
-    --accent-edge: 221 45% 28%;
+    --accent: 172 42% 54%;
+    --accent-ink: 30 9% 7%;
+    --accent-wash: 174 30% 13%;
+    --accent-edge: 174 24% 28%;
 
-    --ok: 154 55% 54%;
-    --ok-wash: 154 45% 14%;
-    --caution: 38 88% 60%;
-    --caution-wash: 38 45% 15%;
-    --alert: 356 78% 62%;
-    --alert-wash: 356 45% 16%;
+    --marker: 52 88% 58%;
 
-    --focus: 217 91% 60%;
+    --ok: 96 36% 58%;
+    --ok-wash: 96 24% 12%;
+    --caution: 38 80% 60%;
+    --caution-wash: 38 40% 12%;
+    --alert: 354 72% 66%;
+    --alert-wash: 354 40% 13%;
+
+    --focus: 172 42% 54%;
+    --grain-opacity: 0.07;
   }
 
   * {
@@ -113,17 +126,36 @@
   }
 
   body {
-    background: hsl(var(--ground));
+    background-color: hsl(var(--ground));
     color: hsl(var(--ink));
     font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
 
-  h1, h2, h3, h4 {
+  /* Paper grain, under everything and never over a photograph. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: var(--grain-opacity);
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.45 0 0 0 0 0.4 0 0 0 1 0'/></filter><rect width='100%' height='100%' filter='url(%23g)'/></svg>");
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-display), ui-serif, Georgia, serif;
+    font-weight: 400;
+    text-wrap: balance;
+    letter-spacing: -0.012em;
+    font-optical-sizing: auto;
+  }
+
+  h4, h5, h6 {
     font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
     font-weight: 600;
-    text-wrap: balance;
-    letter-spacing: -0.018em;
+    letter-spacing: -0.005em;
   }
 
   input[type="number"], table {
@@ -136,35 +168,35 @@
   }
 
   ::selection {
-    background: hsl(var(--accent-wash));
-    color: hsl(var(--ink));
+    background: hsl(var(--marker));
+    color: hsl(30 12% 10%);
   }
 }
 
 @layer components {
-  /* Modern clean card surface */
+  /* A sheet of paper, not a floating card: hairline edge, no shadow. */
   .panel {
     background: hsl(var(--surface));
     border: 1px solid hsl(var(--rule));
     border-radius: var(--radius-lg);
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
   }
 
   .panel-interactive {
     background: hsl(var(--surface));
     border: 1px solid hsl(var(--rule));
     border-radius: var(--radius-lg);
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.25s cubic-bezier(0.2, 0.7, 0.2, 1);
   }
 
+  /* Hover marks the sheet with a highlighter stroke down its edge. */
   .panel-interactive:hover {
-    border-color: hsl(var(--accent-edge));
-    box-shadow: 0 6px 16px -3px rgba(0, 0, 0, 0.08);
-    transform: translateY(-1px);
+    border-color: hsl(var(--rule-strong));
+    box-shadow: inset 3px 0 0 hsl(var(--marker));
   }
 
-  /* Measurement font */
+  /* Instrument readouts: every measurement is set in mono. */
   .readout {
     font-family: var(--font-mono), ui-monospace, monospace;
     font-variant-numeric: tabular-nums;
@@ -174,30 +206,99 @@
   .readout-lg {
     font-family: var(--font-mono), ui-monospace, monospace;
     font-variant-numeric: tabular-nums;
-    font-size: 1.75rem;
-    line-height: 1.15;
-    letter-spacing: -0.035em;
-    font-weight: 600;
+    font-size: 2rem;
+    line-height: 1.05;
+    letter-spacing: -0.04em;
+    font-weight: 500;
   }
 
-  /* Small uppercase badge / eyebrow */
+  /* Eyebrows read like instrument labels. */
   .label {
-    font-size: 0.725rem;
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 0.6875rem;
     line-height: 1;
-    font-weight: 600;
-    letter-spacing: 0.06em;
+    font-weight: 500;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
     color: hsl(var(--ink-faint));
   }
 
+  /* A highlighter pass under a phrase. */
+  .marker {
+    background-image: linear-gradient(
+      to top,
+      hsl(var(--marker) / 0.9) 0,
+      hsl(var(--marker) / 0.9) 38%,
+      transparent 38%
+    );
+    padding-inline: 0.06em;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
+
+  /* Ruler ticks beneath a measurement: minor every 8px, major every 40px. */
+  .ruler {
+    height: 9px;
+    background:
+      repeating-linear-gradient(to right, hsl(var(--ink-soft)) 0 1px, transparent 1px 40px) left bottom / 100% 9px no-repeat,
+      repeating-linear-gradient(to right, hsl(var(--rule-strong)) 0 1px, transparent 1px 8px) left bottom / 100% 5px no-repeat;
+  }
+
   .scale-rule {
     height: 1px;
-    background: linear-gradient(
-      to right,
-      hsl(var(--rule-strong)) 0%,
-      hsl(var(--rule)) 50%,
-      transparent 100%
-    );
+    background: linear-gradient(to right, hsl(var(--ink-soft)) 0%, hsl(var(--rule)) 45%, transparent 100%);
+  }
+
+  /* Crop marks: a photograph mounted as a figure plate. */
+  .crop-marks {
+    --crop: hsl(var(--ink-soft));
+    --crop-len: 12px;
+    padding: 7px;
+    background:
+      linear-gradient(var(--crop), var(--crop)) left top / var(--crop-len) 1px no-repeat,
+      linear-gradient(var(--crop), var(--crop)) left top / 1px var(--crop-len) no-repeat,
+      linear-gradient(var(--crop), var(--crop)) right top / var(--crop-len) 1px no-repeat,
+      linear-gradient(var(--crop), var(--crop)) right top / 1px var(--crop-len) no-repeat,
+      linear-gradient(var(--crop), var(--crop)) left bottom / var(--crop-len) 1px no-repeat,
+      linear-gradient(var(--crop), var(--crop)) left bottom / 1px var(--crop-len) no-repeat,
+      linear-gradient(var(--crop), var(--crop)) right bottom / var(--crop-len) 1px no-repeat,
+      linear-gradient(var(--crop), var(--crop)) right bottom / 1px var(--crop-len) no-repeat;
+  }
+
+  /* Figure captions under plates and charts. */
+  .caption {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 0.6875rem;
+    line-height: 1.45;
+    letter-spacing: 0.02em;
+    color: hsl(var(--ink-faint));
+  }
+
+  /* Graph paper, for empty states and the sign-in desk. */
+  .graph-paper {
+    background-image:
+      linear-gradient(hsl(var(--rule) / 0.55) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--rule) / 0.55) 1px, transparent 1px);
+    background-size: 24px 24px;
+    background-position: -1px -1px;
+  }
+}
+
+/* Printing (the doctor report): plain white paper, black ink, no app chrome. */
+@media print {
+  /* !important: an explicit dark theme must not print light-grey on white. */
+  :root {
+    --ground: 0 0% 100% !important;
+    --surface: 0 0% 100% !important;
+    --surface-sunken: 0 0% 96% !important;
+    --ink: 0 0% 0% !important;
+    --ink-soft: 0 0% 25% !important;
+    --ink-faint: 0 0% 40% !important;
+    --rule: 0 0% 82% !important;
+    --rule-strong: 0 0% 60% !important;
+  }
+  body::before {
+    display: none;
   }
 }
 

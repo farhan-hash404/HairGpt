@@ -2,6 +2,7 @@
 -r requirements.txt
 
 pytest==8.3.4
+fakeredis==2.38.0                  # Redis in tests
 
 # Experiment tracking and evaluation reports
 mlflow==3.16.1

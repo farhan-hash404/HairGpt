@@ -1,8 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ShieldAlert } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ShieldAlert, Stethoscope } from "lucide-react";
 
 /**
  * Self-reported safety questions.
@@ -85,18 +84,17 @@ export function SymptomCheck({
       : Object.values(skin).some((v) => (typeof v === "number" ? v > 0 : v));
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
-          <ShieldAlert className="h-4 w-4 text-caution" />
-          Safety check
-        </CardTitle>
-        <p className="text-sm text-ink-soft">
-          Photos can&apos;t show everything. Tick anything you&apos;ve noticed — these are things a clinician should look
-          at, and we&apos;d rather send you to one than miss them.
-        </p>
-      </CardHeader>
-      <CardContent className="space-y-2">
+    <section>
+      <p className="flex items-center gap-2 font-display text-xl">
+        <ShieldAlert className="h-5 w-5 text-caution" strokeWidth={1.75} />
+        Safety check
+      </p>
+      <p className="mt-1.5 max-w-[62ch] text-sm leading-relaxed text-ink-soft">
+        Photos can&apos;t show everything. Tick anything you&apos;ve noticed: these are things a clinician should look
+        at, and we would rather send you to one than miss them.
+      </p>
+
+      <div className="mt-4 border-t border-ink">
         {questions.map((q) => {
           const checked =
             domain === "hair"
@@ -108,7 +106,7 @@ export function SymptomCheck({
           return (
             <label
               key={String(q.key)}
-              className="flex cursor-pointer items-start gap-3 rounded border p-3 text-sm hover:bg-surface-sunken"
+              className="flex cursor-pointer items-start gap-3.5 border-b border-rule py-3.5 text-[0.95rem] transition-colors hover:bg-surface-sunken/60"
             >
               <input
                 type="checkbox"
@@ -124,23 +122,25 @@ export function SymptomCheck({
                     onSkinChange({ ...skin, [q.key]: on } as SkinSymptoms);
                   }
                 }}
-                className="mt-0.5 h-4 w-4 accent-[hsl(var(--accent))]"
+                className="ml-1 mt-[3px] h-4 w-4 shrink-0 accent-[hsl(var(--alert))]"
               />
               <span>{q.label}</span>
             </label>
           );
         })}
+      </div>
 
-        {anyChecked && (
-          <div className="rounded border border-alert/40 bg-alert-wash p-3 text-sm">
-            <p className="font-medium">We&apos;ll recommend seeing a clinician.</p>
-            <p className="mt-0.5 text-ink-soft">
-              Because you flagged something above, this scan will skip cosmetic and self-treatment suggestions and
-              recommend professional evaluation instead.
-            </p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+      {anyChecked && (
+        <div role="status" className="mt-4 border-l-2 border-alert bg-alert-wash px-4 py-3 text-sm">
+          <p className="flex items-center gap-2 font-medium text-alert">
+            <Stethoscope className="h-4 w-4" /> We&apos;ll recommend seeing a clinician.
+          </p>
+          <p className="mt-1 leading-relaxed text-ink-soft">
+            Because you flagged something above, this scan will skip cosmetic and self-treatment suggestions and
+            recommend professional evaluation instead.
+          </p>
+        </div>
+      )}
+    </section>
   );
 }

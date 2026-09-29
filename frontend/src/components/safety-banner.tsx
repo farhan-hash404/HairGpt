@@ -68,9 +68,9 @@ export function SafetyBanner({ verdict }: { verdict: SafetyVerdict }) {
               {verdict.red_flags.map((flag) => (
                 <li
                   key={flag}
-                  className="readout rounded border border-current/25 px-1.5 py-0.5 text-2xs text-ink-soft"
+                  className="readout rounded-sm border border-rule-strong px-1.5 py-0.5 text-2xs text-ink-soft"
                 >
-                  {flag}
+                  {flag.replace(/^history_/, "").replace(/_/g, " ")}
                 </li>
               ))}
             </ul>

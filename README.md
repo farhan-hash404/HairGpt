@@ -63,14 +63,10 @@ python -m venv .venv
 Activate it — `.venv\Scripts\activate` (Windows) or `source .venv/bin/activate` (macOS/Linux) — then:
 
 ```bash
-pip install fastapi "uvicorn[standard]" pydantic pydantic-settings SQLAlchemy alembic "python-jose[cryptography]" argon2-cffi python-multipart email-validator httpx pytest numpy Pillow
+pip install -r requirements-dev.txt
 ```
 
-Or install everything including optional extras:
-
-```bash
-pip install -r requirements.txt
-```
+(`requirements.txt` alone is the leaner runtime set the deployed API uses; `-dev` adds tests, MLflow and the evaluation tooling.)
 
 Configure and initialize:
 
